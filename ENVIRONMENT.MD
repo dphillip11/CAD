@@ -100,6 +100,23 @@ If you'd prefer to only deploy manually or on release, I can change the workflow
 
 Note: GitHub sometimes requires enabling Pages in repository settings the first time. If the site does not appear after deployment, go to Settings -> Pages and set the source to the `gh-pages` branch (the workflow will create this branch automatically on the first deployment).
 
+GitHub Pages deploy permissions
+
+If the `deploy-pages` job fails with a 403 when pushing to `gh-pages`, there are two common fixes:
+
+1) Enable "Read and write permissions" for GitHub Actions in repository settings:
+
+	Settings -> Actions -> General -> Workflow permissions -> "Read and write permissions"
+
+	This allows the default `GITHUB_TOKEN` used in workflows to push to branches.
+
+2) Create a Personal Access Token (PAT) with `repo` scope and store it as a repository secret `GH_PAGES_PAT`:
+
+	- Create PAT: https://github.com/settings/tokens (give it repo scope)
+	- Add it to repo: Settings -> Secrets and variables -> Actions -> New repository secret (name it `GH_PAGES_PAT`)
+
+	The workflow will prefer `GH_PAGES_PAT` if present and fall back to `GITHUB_TOKEN` otherwise.
+
 Quick run scripts
 
 To make the common workflows easier there are two convenience scripts:

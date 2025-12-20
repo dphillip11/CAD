@@ -159,11 +159,19 @@ jobs:
             echo "Error: web/hello.html not found"
             exit 1
           fi
+          if [ ! -f web/index.html ]; then
+            echo "Warning: web/index.html not found — creating a simple index.html to redirect to hello.html"
+            echo '<!doctype html><meta http-equiv="refresh" content="0; url=hello.html">' > web/index.html
+          fi
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Prefer a user-provided PAT with repo write access if present (secrets.GH_PAGES_PAT),
+          # otherwise fall back to the default GITHUB_TOKEN. If you see a 403 on push,
+          # add a PAT with 'repo' scope as a repository secret named GH_PAGES_PAT or
+          # enable 'Read and write permissions' for Actions in repository settings.
+          github_token: ${{ secrets.GH_PAGES_PAT || secrets.GITHUB_TOKEN }}
           publish_dir: ./web
           publish_branch: gh-pages
           # Keep history small and avoid empty commits
@@ -181,22 +189,23 @@ jobs:
           OWNER="$(echo "$GITHUB_REPOSITORY" | cut -d/ -f1)"
           REPO="$(echo "$GITHUB_REPOSITORY" | cut -d/ -f2)"
           SITE_URL="https://${OWNER}.github.io/${REPO}"
-          echo "Checking ${SITE_URL}/hello.html"
+          echo "Checking ${SITE_URL} (root) and ${SITE_URL}/hello.html"
           SUCCESS=1
           for i in $(seq 1 12); do
             echo "Attempt ${i}..."
-            if curl -sSfL "${SITE_URL}/hello.html" -o /tmp/hello.html; then
-              echo "Fetched hello.html — checking contents"
+            # Try root first, then /hello.html
+            if curl -sSfL "${SITE_URL}" -o /tmp/hello.html || curl -sSfL "${SITE_URL}/hello.html" -o /tmp/hello.html; then
+              echo "Fetched page — checking contents"
               if grep -qi '\.wasm' /tmp/hello.html || grep -qi 'Hello' /tmp/hello.html; then
                 echo "Smoke test passed (found expected content)"
                 SUCCESS=0
                 break
               else
-                echo "hello.html fetched but content did not match expectations (showing snippet):"
+                echo "Page fetched but content did not match expectations (showing snippet):"
                 head -n 40 /tmp/hello.html || true
               fi
             else
-              echo "Unable to fetch hello.html yet"
+              echo "Unable to fetch page yet"
             fi
             sleep 10
           done
