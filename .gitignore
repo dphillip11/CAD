@@ -1,0 +1,48 @@
+# Build artifacts
+/build/
+*/build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# FetchContent / external deps
+_deps/
+build/_deps/
+
+# Libraries and object files
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+
+# Executables
+cad_app
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.suo
+*.user
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Logs and temp files
+*.log
+*.tmp
+
+# Emscripten / web build outputs (generated)
+/web/
+*.html
+*.js
+*.wasm
+
+# pre-commit cache
+.cache/
