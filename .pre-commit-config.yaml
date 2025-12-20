@@ -2,7 +2,7 @@ repos:
   - repo: local
     hooks:
       - id: clang-format
-        name: clang-format
-        entry: clang-format -i
-        language: system
+        name: clang-format (auto-format & add)
+        entry: scripts/hooks/clang-format-and-add.sh
+        language: script
         files: '\\.(c|cpp|cc|h|hpp)$'

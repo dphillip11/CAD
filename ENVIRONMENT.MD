@@ -71,6 +71,10 @@ There is also a convenience script to format all C/C++ files:
 
 On CI, a `lint` job runs `pre-commit` and checks C/C++ formatting on pull requests to `main`.
 
+Auto-format on commit
+
+The clang-format pre-commit hook will now automatically format staged C/C++ files and re-stage them before the commit completes. This keeps code consistently formatted without manual steps. If you prefer to only check formatting without auto-fixing, let me know and I'll revert to a check-only hook.
+
 GitHub Pages deployment
 
 When code is pushed to `main` the CI will build the web artifact and deploy the `web/` directory to the `gh-pages` branch. After the first deploy, GitHub Pages will serve the site at:
