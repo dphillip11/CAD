@@ -73,8 +73,8 @@ jobs:
           fi
           cmake --version
 
-      - name: Configure
-        run: cmake -S . -B build -D CMAKE_BUILD_TYPE=Release
+      - name: Configure (enable tests)
+        run: cmake -S . -B build -D CMAKE_BUILD_TYPE=Release -D BUILD_TESTS=ON
 
       - name: Build
         run: cmake --build build --config Release -- -j 2
