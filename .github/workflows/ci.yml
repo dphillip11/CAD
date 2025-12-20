@@ -96,31 +96,32 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cad-deps-
 
-      - name: Setup Emscripten
-        uses: emscripten/actions/setup-emsdk@v2
-        with:
-          emsdk-version: '3.1.36'
-
       - name: Cache Emscripten SDK
         uses: actions/cache@v4
         with:
           path: |
             ~/.emsdk
             ~/.emscripten
-          key: emsdk-${{ matrix.os }}-3.1.36
+          key: emsdk-${{ runner.os }}-v1
           restore-keys: |
-            emsdk-${{ matrix.os }}-
+            emsdk-${{ runner.os }}-
 
-      - name: Verify Emscripten
+      - name: Install or update Emscripten SDK and build web artifact
         run: |
-          if ! command -v emcc >/dev/null 2>&1; then
-            echo "Error: emcc not found after emsdk setup"
-            exit 1
+          set -euo pipefail
+          # Clone or update emsdk in $HOME/.emsdk
+          if [ -d "$HOME/.emsdk" ]; then
+            cd "$HOME/.emsdk" && git pull || true
+          else
+            git clone https://github.com/emscripten-core/emsdk.git "$HOME/.emsdk"
           fi
+          cd "$HOME/.emsdk"
+          ./emsdk install latest
+          ./emsdk activate latest
+          # Source the environment for this step and run the build in the same shell
+          # so that emcc is available when running the build script.
+          source ./emsdk_env.sh
           emcc --version
-
-      - name: Build web artifact
-        run: |
           chmod +x scripts/build-web.sh
           ./scripts/build-web.sh
 
