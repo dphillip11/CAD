@@ -122,6 +122,13 @@ jobs:
           # so that emcc is available when running the build script.
           source ./emsdk_env.sh
           emcc --version
+          # Ensure we are in the repository workspace when running the build script
+          cd "$GITHUB_WORKSPACE"
+          ls -la || true
+          if [ ! -f scripts/build-web.sh ]; then
+            echo "Error: scripts/build-web.sh not found in repository workspace (pwd=$(pwd))"
+            exit 1
+          fi
           chmod +x scripts/build-web.sh
           ./scripts/build-web.sh
 
@@ -161,3 +168,39 @@ jobs:
           publish_branch: gh-pages
           # Keep history small and avoid empty commits
           allow_empty_commit: false
+
+  pages-smoke-test:
+    name: Smoke test GitHub Pages
+    runs-on: ubuntu-latest
+    needs: deploy-pages
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Wait for site to become available and fetch /hello.html
+        run: |
+          set -euo pipefail
+          OWNER="$(echo "$GITHUB_REPOSITORY" | cut -d/ -f1)"
+          REPO="$(echo "$GITHUB_REPOSITORY" | cut -d/ -f2)"
+          SITE_URL="https://${OWNER}.github.io/${REPO}"
+          echo "Checking ${SITE_URL}/hello.html"
+          SUCCESS=1
+          for i in $(seq 1 12); do
+            echo "Attempt ${i}..."
+            if curl -sSfL "${SITE_URL}/hello.html" -o /tmp/hello.html; then
+              echo "Fetched hello.html — checking contents"
+              if grep -qi '\.wasm' /tmp/hello.html || grep -qi 'Hello' /tmp/hello.html; then
+                echo "Smoke test passed (found expected content)"
+                SUCCESS=0
+                break
+              else
+                echo "hello.html fetched but content did not match expectations (showing snippet):"
+                head -n 40 /tmp/hello.html || true
+              fi
+            else
+              echo "Unable to fetch hello.html yet"
+            fi
+            sleep 10
+          done
+          if [ "$SUCCESS" -ne 0 ]; then
+            echo "Smoke test failed: ${SITE_URL}/hello.html not available or content unexpected"
+            exit 1
+          fi
