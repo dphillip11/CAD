@@ -46,8 +46,32 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cad-
 
-      - name: Install CMake
-        uses: lukka/get-cmake@v3
+      - name: Check CMake
+        run: cmake --version || true
+
+      - name: Install CMake on Ubuntu
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          if ! command -v cmake >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y cmake
+          fi
+
+      - name: Install CMake on macOS
+        if: matrix.os == 'macos-latest'
+        run: |
+          if ! command -v cmake >/dev/null 2>&1; then
+            brew install cmake
+          fi
+
+      - name: Verify CMake installation
+        run: |
+          if ! command -v cmake >/dev/null 2>&1; then
+            echo "Error: cmake is not available after attempted installation."
+            echo "Check previous logs for installation errors and ensure the runner can install packages."
+            exit 1
+          fi
+          cmake --version
 
       - name: Configure
         run: cmake -S . -B build -D CMAKE_BUILD_TYPE=Release
@@ -64,10 +88,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache FetchContent deps
+        uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: ${{ runner.os }}-cad-deps-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-cad-deps-
+
       - name: Setup Emscripten
         uses: emscripten/actions/setup-emsdk@v2
         with:
           emsdk-version: '3.1.36'
+
+      - name: Cache Emscripten SDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.emsdk
+            ~/.emscripten
+          key: emsdk-${{ matrix.os }}-3.1.36
+          restore-keys: |
+            emsdk-${{ matrix.os }}-
+
+      - name: Verify Emscripten
+        run: |
+          if ! command -v emcc >/dev/null 2>&1; then
+            echo "Error: emcc not found after emsdk setup"
+            exit 1
+          fi
+          emcc --version
 
       - name: Build web artifact
         run: |
