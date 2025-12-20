@@ -24,7 +24,7 @@ if [ -f web/hello.html ]; then
     <meta http-equiv="refresh" content="0; url=hello.html">
     <title>CAD Hello</title>
   </head>
-  <body>
+  <body> 
     <p>Redirecting to <a href="hello.html">hello.html</a>...</p>
   </body>
 </html>
