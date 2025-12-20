@@ -41,7 +41,20 @@ Tests:
 
 Run unit tests with CTest after building the project (tests use Google Test):
 
-  cmake --build . --target test
+	Configure with tests enabled and build (will attempt to fetch GoogleTest using git):
+
+		cmake -S . -B build -DBUILD_TESTS=ON -D CMAKE_BUILD_TYPE=Debug
+		cmake --build build --config Debug
+
+	Run the tests:
+
+		# from the build directory
+		cd build
+		ctest --output-on-failure -C Debug
+
+	Or use the convenience target added by CMake:
+
+		cmake --build build --target check
 
 Continuous Integration:
 
