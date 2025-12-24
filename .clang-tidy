@@ -1,0 +1,6 @@
+Checks: >
+  google-*,
+  modernize-*,
+  readability-*,
+  performance-*
+WarningsAsErrors: ''

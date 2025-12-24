@@ -10,8 +10,8 @@ if ! command -v emcc >/dev/null 2>&1; then
 fi
 
 mkdir -p web
-echo "Compiling src/main.cpp and src/hello.cpp -> web/hello.html"
-emcc src/main.cpp src/hello.cpp -o web/hello.html -s WASM=1 -O2 -s "EXPORTED_RUNTIME_METHODS=['ccall','cwrap']" -s ENVIRONMENT='web'
+echo "Compiling src/main.cpp, src/hello.cpp and src/triangle.cpp -> web/hello.html"
+emcc src/main.cpp src/hello.cpp src/triangle.cpp -o web/hello.html -s WASM=1 -O2 -s "EXPORTED_RUNTIME_METHODS=['ccall','cwrap']" -s ENVIRONMENT='web'
 echo "Built web/hello.html. Serve the 'web' directory (e.g. python -m http.server -d web) and open http://localhost:8000/hello.html"
 
 # Ensure there's an index.html at the site root so GitHub Pages can serve the app at /

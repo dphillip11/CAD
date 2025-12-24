@@ -8,6 +8,7 @@ Uses google test for testing.
 
 
 Example: a minimal "Hello World" application
+Updated: now includes a small "Hello, Triangle" demo that renders a simple SVG triangle.
 
 Build and run locally (native build):
 
@@ -22,6 +23,9 @@ Build and run locally (native build):
 	./cad_app
 
 You should see the message "Hello, World! from CAD" printed to stdout.
+Additionally, the native app will write a `triangle.svg` file to the working directory and
+attempt to open it in your system's default viewer. The SVG contains a simple filled
+triangle with the text "Hello, Triangle! from CAD".
 
 Build and run in a web browser (Emscripten):
 
@@ -36,6 +40,9 @@ Build and run in a web browser (Emscripten):
 
 	python -m http.server -d web 8000
 	# then open http://localhost:8000/hello.html
+
+The web build injects an inline SVG triangle into the generated `hello.html` so no
+additional assets are required; open the page to see the triangle and greeting.
 
 Tests:
 
