@@ -1,0 +1,55 @@
+#pragma once
+
+#include <cstddef>
+#include <cstdint>
+#include <span>
+#include <string>
+
+#include "Rendering/PrimitiveTopology.h"
+
+class VertexBuffer;
+class IndexBuffer;
+class Mat4;
+struct VertexAttribute;
+class Vec3;
+
+class RenderDevice {
+ public:
+  virtual ~RenderDevice() = default;
+
+  // ----- Resource creation -----
+  virtual uint32_t CreateVertexBuffer(std::size_t sizeBytes) = 0;
+  virtual uint32_t CreateIndexBuffer(std::size_t sizeBytes) = 0;
+  virtual uint32_t CreateShader(const std::string& vertexSource, const std::string& fragmentSource,
+                                const std::string& geometrySource = "") = 0;
+
+  virtual void DestroyBuffer(uint32_t handle) = 0;
+  virtual void DestroyShader(uint32_t handle) = 0;
+
+  // ----- Buffer updates -----
+  virtual void UpdateVertexBuffer(uint32_t handle, std::span<const std::byte> data) = 0;
+
+  virtual void UpdateIndexBuffer(uint32_t handle, std::span<const uint32_t> indices) = 0;
+
+  // ----- Binding -----
+  virtual void BindVertexBuffer(uint32_t handle) = 0;
+  virtual void SetVertexAttributes(uint32_t handle,
+                                   const std::span<VertexAttribute>& attributes) = 0;
+  virtual void BindIndexBuffer(uint32_t handle) = 0;
+
+  virtual void BindShader(uint32_t shaderHandle) = 0;
+
+  // ----- Uniforms -----
+  virtual void SetUniform(const std::string& name, const Vec3& vec) = 0;
+  virtual void SetUniform(const std::string& name, const float valueA, const float valueB) = 0;
+  virtual void SetUniform(const std::string& name, const Mat4& matrix) = 0;
+  virtual void SetUniform(const std::string& name, int value) = 0;
+  virtual void SetUniform(const std::string& name, float value) = 0;
+
+  // ----- Draw -----
+  virtual void DrawIndexed(PrimitiveTopology topology, std::size_t indexCount) = 0;
+
+  // ----- Frame control -----
+  virtual void BeginFrame() = 0;
+  virtual void EndFrame() = 0;
+};

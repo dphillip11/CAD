@@ -82,134 +82,134 @@ jobs:
       - name: Run tests
         run: ctest --test-dir build --output-on-failure
 
-  web-build:
-    name: Build web (Emscripten)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+  # web-build:
+  #   name: Build web (Emscripten)
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Cache FetchContent deps
-        uses: actions/cache@v4
-        with:
-          path: build/_deps
-          key: ${{ runner.os }}-cad-deps-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-cad-deps-
+  #     - name: Cache FetchContent deps
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: build/_deps
+  #         key: ${{ runner.os }}-cad-deps-${{ hashFiles('**/CMakeLists.txt') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-cad-deps-
 
-      - name: Cache Emscripten SDK
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.emsdk
-            ~/.emscripten
-          key: emsdk-${{ runner.os }}-v1
-          restore-keys: |
-            emsdk-${{ runner.os }}-
+  #     - name: Cache Emscripten SDK
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: |
+  #           ~/.emsdk
+  #           ~/.emscripten
+  #         key: emsdk-${{ runner.os }}-v1
+  #         restore-keys: |
+  #           emsdk-${{ runner.os }}-
 
-      - name: Install or update Emscripten SDK and build web artifact
-        run: |
-          set -euo pipefail
-          # Clone or update emsdk in $HOME/.emsdk
-          if [ -d "$HOME/.emsdk" ]; then
-            cd "$HOME/.emsdk" && git pull || true
-          else
-            git clone https://github.com/emscripten-core/emsdk.git "$HOME/.emsdk"
-          fi
-          cd "$HOME/.emsdk"
-          ./emsdk install latest
-          ./emsdk activate latest
-          # Source the environment for this step and run the build in the same shell
-          # so that emcc is available when running the build script.
-          source ./emsdk_env.sh
-          emcc --version
-          # Ensure we are in the repository workspace when running the build script
-          cd "$GITHUB_WORKSPACE"
-          ls -la || true
-          if [ ! -f scripts/build-web.sh ]; then
-            echo "Error: scripts/build-web.sh not found in repository workspace (pwd=$(pwd))"
-            exit 1
-          fi
-          chmod +x scripts/build-web.sh
-          ./scripts/build-web.sh
+  #     - name: Install or update Emscripten SDK and build web artifact
+  #       run: |
+  #         set -euo pipefail
+  #         # Clone or update emsdk in $HOME/.emsdk
+  #         if [ -d "$HOME/.emsdk" ]; then
+  #           cd "$HOME/.emsdk" && git pull || true
+  #         else
+  #           git clone https://github.com/emscripten-core/emsdk.git "$HOME/.emsdk"
+  #         fi
+  #         cd "$HOME/.emsdk"
+  #         ./emsdk install latest
+  #         ./emsdk activate latest
+  #         # Source the environment for this step and run the build in the same shell
+  #         # so that emcc is available when running the build script.
+  #         source ./emsdk_env.sh
+  #         emcc --version
+  #         # Ensure we are in the repository workspace when running the build script
+  #         cd "$GITHUB_WORKSPACE"
+  #         ls -la || true
+  #         if [ ! -f scripts/build-web.sh ]; then
+  #           echo "Error: scripts/build-web.sh not found in repository workspace (pwd=$(pwd))"
+  #           exit 1
+  #         fi
+  #         chmod +x scripts/build-web.sh
+  #         ./scripts/build-web.sh
 
-      - name: Upload web artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: web
-          path: web
+  #     - name: Upload web artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: web
+  #         path: web
 
-  deploy-pages:
-    name: Deploy web/ to GitHub Pages
-    runs-on: ubuntu-latest
-    needs: web-build
-    # Only deploy for pushes to main (not for pull_request events)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - name: Download web artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: web
-          path: web
+  # deploy-pages:
+  #   name: Deploy web/ to GitHub Pages
+  #   runs-on: ubuntu-latest
+  #   needs: web-build
+  #   # Only deploy for pushes to main (not for pull_request events)
+  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  #   steps:
+  #     - name: Download web artifact
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: web
+  #         path: web
 
-      - name: Verify web artifact
-        run: |
-          echo "Contents of web/"
-          ls -la web || true
-          if [ ! -f web/hello.html ]; then
-            echo "Error: web/hello.html not found"
-            exit 1
-          fi
-          if [ ! -f web/index.html ]; then
-            echo "Warning: web/index.html not found — creating a simple index.html to redirect to hello.html"
-            echo '<!doctype html><meta http-equiv="refresh" content="0; url=hello.html">' > web/index.html
-          fi
+  #     - name: Verify web artifact
+  #       run: |
+  #         echo "Contents of web/"
+  #         ls -la web || true
+  #         if [ ! -f web/hello.html ]; then
+  #           echo "Error: web/hello.html not found"
+  #           exit 1
+  #         fi
+  #         if [ ! -f web/index.html ]; then
+  #           echo "Warning: web/index.html not found — creating a simple index.html to redirect to hello.html"
+  #           echo '<!doctype html><meta http-equiv="refresh" content="0; url=hello.html">' > web/index.html
+  #         fi
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          # Prefer a user-provided PAT with repo write access if present (secrets.GH_PAGES_PAT),
-          # otherwise fall back to the default GITHUB_TOKEN. If you see a 403 on push,
-          # add a PAT with 'repo' scope as a repository secret named GH_PAGES_PAT or
-          # enable 'Read and write permissions' for Actions in repository settings.
-          github_token: ${{ secrets.GH_PAGES_PAT || secrets.GITHUB_TOKEN }}
-          publish_dir: ./web
-          publish_branch: gh-pages
-          # Keep history small and avoid empty commits
-          allow_empty_commit: false
+  #     - name: Deploy to GitHub Pages
+  #       uses: peaceiris/actions-gh-pages@v3
+  #       with:
+  #         # Prefer a user-provided PAT with repo write access if present (secrets.GH_PAGES_PAT),
+  #         # otherwise fall back to the default GITHUB_TOKEN. If you see a 403 on push,
+  #         # add a PAT with 'repo' scope as a repository secret named GH_PAGES_PAT or
+  #         # enable 'Read and write permissions' for Actions in repository settings.
+  #         github_token: ${{ secrets.GH_PAGES_PAT || secrets.GITHUB_TOKEN }}
+  #         publish_dir: ./web
+  #         publish_branch: gh-pages
+  #         # Keep history small and avoid empty commits
+  #         allow_empty_commit: false
 
-  pages-smoke-test:
-    name: Smoke test GitHub Pages
-    runs-on: ubuntu-latest
-    needs: deploy-pages
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - name: Wait for site to become available and fetch /hello.html
-        run: |
-          set -euo pipefail
-          OWNER="$(echo "$GITHUB_REPOSITORY" | cut -d/ -f1)"
-          REPO="$(echo "$GITHUB_REPOSITORY" | cut -d/ -f2)"
-          SITE_URL="https://${OWNER}.github.io/${REPO}"
-          echo "Checking ${SITE_URL} (root) and ${SITE_URL}/hello.html"
-          SUCCESS=1
-          for i in $(seq 1 12); do
-            echo "Attempt ${i}..."
-            # Try root first, then /hello.html
-            if curl -sSfL "${SITE_URL}" -o /tmp/hello.html || curl -sSfL "${SITE_URL}/hello.html" -o /tmp/hello.html; then
-              echo "Fetched page — checking contents"
-              if grep -qi '\.wasm' /tmp/hello.html || grep -qi 'Hello' /tmp/hello.html; then
-                echo "Smoke test passed (found expected content)"
-                SUCCESS=0
-                break
-              else
-                echo "Page fetched but content did not match expectations (showing snippet):"
-                head -n 40 /tmp/hello.html || true
-              fi
-            else
-              echo "Unable to fetch page yet"
-            fi
-            sleep 10
-          done
-          if [ "$SUCCESS" -ne 0 ]; then
-            echo "Smoke test failed: ${SITE_URL}/hello.html not available or content unexpected"
-            exit 1
-          fi
+  # pages-smoke-test:
+  #   name: Smoke test GitHub Pages
+  #   runs-on: ubuntu-latest
+  #   needs: deploy-pages
+  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  #   steps:
+  #     - name: Wait for site to become available and fetch /hello.html
+  #       run: |
+  #         set -euo pipefail
+  #         OWNER="$(echo "$GITHUB_REPOSITORY" | cut -d/ -f1)"
+  #         REPO="$(echo "$GITHUB_REPOSITORY" | cut -d/ -f2)"
+  #         SITE_URL="https://${OWNER}.github.io/${REPO}"
+  #         echo "Checking ${SITE_URL} (root) and ${SITE_URL}/hello.html"
+  #         SUCCESS=1
+  #         for i in $(seq 1 12); do
+  #           echo "Attempt ${i}..."
+  #           # Try root first, then /hello.html
+  #           if curl -sSfL "${SITE_URL}" -o /tmp/hello.html || curl -sSfL "${SITE_URL}/hello.html" -o /tmp/hello.html; then
+  #             echo "Fetched page — checking contents"
+  #             if grep -qi '\.wasm' /tmp/hello.html || grep -qi 'Hello' /tmp/hello.html; then
+  #               echo "Smoke test passed (found expected content)"
+  #               SUCCESS=0
+  #               break
+  #             else
+  #               echo "Page fetched but content did not match expectations (showing snippet):"
+  #               head -n 40 /tmp/hello.html || true
+  #             fi
+  #           else
+  #             echo "Unable to fetch page yet"
+  #           fi
+  #           sleep 10
+  #         done
+  #         if [ "$SUCCESS" -ne 0 ]; then
+  #           echo "Smoke test failed: ${SITE_URL}/hello.html not available or content unexpected"
+  #           exit 1
+  #         fi

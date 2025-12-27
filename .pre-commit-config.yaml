@@ -5,4 +5,3 @@ repos:
         name: clang-format (auto-format & add)
         entry: scripts/hooks/clang-format-and-add.sh
         language: script
-        files: '\\.(c|cpp|cc|h|hpp)$'

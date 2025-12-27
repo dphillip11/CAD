@@ -39,7 +39,7 @@ src/
 │  ├─ Vec3.h
 │  ├─ AABB.h
 │  ├─ Id.h
-│  └─ Types.h
+│  └─ Primitives.h
 │
 ├─ geometry/
 │  ├─ Geometry.h
@@ -67,6 +67,9 @@ src/
 │  ├─ EditCommands.h
 │  ├─ UndoRedo.h
 │  └─ ChangeEvents.h
+|
+├─ modelView/
+|   ├─ Vertex, Edge, Face, Volume
 │
 ├─ renderer/
 │  ├─ Renderer.h
@@ -76,9 +79,8 @@ src/
 │  │
 │  ├─ passes/
 │  │  ├─ LinePass.h
-│  │  ├─ FacePass.h
-│  │  ├─ VolumePass.h
-│  │  └─ CompositePass.h
+│  │  ├─ TrianglePass.h
+|  |  ├─ PickerPass.h 
 │  │
 │  └─ gpu/
 │     ├─ VertexBuffer.h
@@ -90,3 +92,8 @@ src/
 │  └─ main.cpp
 │
 └─ ARCHITECTURE.md
+
+
+Pipeline is GPU state
+Buffers are GPU memory
+RenderDevice is GPU execution

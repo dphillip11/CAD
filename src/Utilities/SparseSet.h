@@ -50,9 +50,7 @@ class SparseSet {
     free_ids_.push_back(id);
   }
 
-  bool Contains(Id id) const {
-    return id < sparse_.size() && sparse_[id] != kInvalid;
-  }
+  bool Contains(Id id) const { return id < sparse_.size() && sparse_[id] != kInvalid; }
 
   T& Get(Id id) {
     assert(Contains(id));
@@ -64,19 +62,27 @@ class SparseSet {
     return dense_[sparse_[id]];
   }
 
-std::vector<T>
-Get(std::span<const Id> ids) const
-{
+  T& operator[](Id id) {
+    assert(Contains(id));
+    return dense_[sparse_[id]];
+  }
+
+  const T& operator[](Id id) const {
+    assert(Contains(id));
+    return dense_[sparse_[id]];
+  }
+
+  std::vector<T> Get(std::span<const Id> ids) const {
     std::vector<T> result;
     result.reserve(ids.size());
 
     for (Id id : ids) {
-        assert(Contains(id));
-        result.push_back(dense_[sparse_[id]]);
+      assert(Contains(id));
+      result.push_back(dense_[sparse_[id]]);
     }
 
     return result;
-}
+  }
 
   // Use for building GPU index buffers
   uint32_t DenseIndex(Id id) const {
