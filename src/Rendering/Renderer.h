@@ -2,11 +2,9 @@
 
 #include <memory>
 
+#include "Rendering/Passes/RenderPass.h"
 #include "Rendering/Resources/RenderResources.h"
 
-class LinePass;
-class FacePass;
-class ScreenPass;
 class FrameContext;
 struct ModelViews;
 class Model;
@@ -32,9 +30,9 @@ class Renderer {
   RenderDevice& device_;
   RenderResources resources_;
 
-  std::unique_ptr<LinePass> linePass_;
-  std::unique_ptr<FacePass> facePass_;
-  std::unique_ptr<ScreenPass> screenPass_;
+  RenderPass linePass_;
+  RenderPass facePass_;
+  RenderPass screenPass_;
 
   bool verticesDirty;
   bool indicesDirty;

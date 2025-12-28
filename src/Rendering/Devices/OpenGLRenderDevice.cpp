@@ -1,10 +1,11 @@
 #include "OpenGLRenderDevice.h"
 
+#include <cassert>
 #include <cstring>
 #include <iostream>
 #include <vector>
 
-#include "Rendering/Resources/VertexBuffer.h"
+#include "Rendering/Resources/VertexAttribute.h"
 #include "Utilities/Mat4.h"
 #include "Utilities/Vec3.h"
 
@@ -101,13 +102,7 @@ GpuHandle OpenGLRenderDevice::CreatePipeline() {
   return vao;
 }
 
-GpuHandle OpenGLRenderDevice::CreateVertexBuffer(std::size_t sizeBytes) {
-  GLuint bufferId;
-  glGenBuffers(1, &bufferId);
-  return bufferId;
-}
-
-GpuHandle OpenGLRenderDevice::CreateIndexBuffer(std::size_t sizeBytes) {
+GpuHandle OpenGLRenderDevice::CreateBuffer() {
   GLuint bufferId;
   glGenBuffers(1, &bufferId);
   return bufferId;
@@ -184,13 +179,27 @@ void OpenGLRenderDevice::DestroyBuffer(GpuHandle handle) { glDeleteBuffers(1, &h
 
 void OpenGLRenderDevice::DestroyShader(GpuHandle handle) { glDeleteProgram(handle); }
 
-void OpenGLRenderDevice::UpdateVertexBuffer(GpuHandle handle, std::span<const std::byte> data) {
+void OpenGLRenderDevice::UpdateVertexBuffer(GpuHandle handle, const size_t bytes,
+                                            const void* data) {
   glBindBuffer(GL_ARRAY_BUFFER, handle);
-  glBufferData(GL_ARRAY_BUFFER, data.size(), data.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, bytes, data, GL_STATIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+void OpenGLRenderDevice::UpdateUniformBuffer(GpuHandle handle, const size_t bytes, const void* data,
+                                             const uint32_t position) {
+  glBindBuffer(GL_UNIFORM_BUFFER, handle);
+  glBufferData(GL_ARRAY_BUFFER, bytes, data, GL_DYNAMIC_DRAW);
+  glBufferData(GL_UNIFORM_BUFFER, bytes, nullptr, GL_DYNAMIC_DRAW);
+
+  glBindBufferBase(GL_UNIFORM_BUFFER, position, handle);
+
+  GLuint blockIndex = glGetUniformBlockIndex(currentShader_, "GlobalUniforms");
+  glUniformBlockBinding(currentShader_, blockIndex, 0);
+}
+
 void OpenGLRenderDevice::UpdateIndexBuffer(GpuHandle handle, std::span<const uint32_t> indices) {
+  std::cout << indices.size() * sizeof(uint32_t) << " expected \n";
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), indices.data(),
                GL_STATIC_DRAW);
@@ -242,8 +251,8 @@ void OpenGLRenderDevice::BindShader(GpuHandle shaderHandle) {
   currentShader_ = shaderHandle;
 }
 
-void OpenGLRenderDevice::BindTexture(GpuHandle handle) {
-  glActiveTexture(GL_TEXTURE0);
+void OpenGLRenderDevice::BindTexture(GpuHandle handle, const uint32_t index) {
+  glActiveTexture(GL_TEXTURE0 + index);
   glBindTexture(GL_TEXTURE_2D, handle);
 }
 
@@ -293,6 +302,28 @@ void OpenGLRenderDevice::SetUniform(const std::string& name, float value) {
 }
 
 void OpenGLRenderDevice::DrawIndexed(PrimitiveTopology topology, std::size_t indexCount) {
+  // Debug: Check current OpenGL state
+  GLint vao = 0, vbo = 0, ebo = 0;
+  glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
+  glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &vbo);
+  glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &ebo);
+
+  std::cout << "DrawIndexed - VAO: " << vao << ", VBO: " << vbo << ", EBO: " << ebo
+            << ", IndexCount: " << indexCount << std::endl;
+
+  if (vao == 0) {
+    std::cerr << "ERROR: No VAO bound!" << std::endl;
+  }
+  if (ebo == 0) {
+    std::cerr << "ERROR: No index buffer bound!" << std::endl;
+  }
+
+  GLint eboSize = 0;
+
+  glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &eboSize);
+
+  std::cout << "EBO size (bytes): " << eboSize << std::endl;
+
   GLenum mode = TopologyToGLenum(topology);
 
   glDrawElements(mode, static_cast<GLsizei>(indexCount), GL_UNSIGNED_INT, nullptr);
@@ -302,6 +333,10 @@ void OpenGLRenderDevice::DrawIndexed(PrimitiveTopology topology, std::size_t ind
     std::cerr << "OpenGL error after draw: " << error << " (" << GetErrorString(error) << ")"
               << std::endl;
   }
+}
+
+void OpenGLRenderDevice::SetViewport(int x, int y, int width, int height) {
+  glViewport(x, y, width, height);
 }
 
 void OpenGLRenderDevice::BeginFrame() {

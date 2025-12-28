@@ -26,8 +26,7 @@ class OpenGLRenderDevice : public RenderDevice {
 
   // ----- Resource creation -----
   GpuHandle CreatePipeline() override;
-  GpuHandle CreateVertexBuffer(std::size_t sizeBytes) override;
-  GpuHandle CreateIndexBuffer(std::size_t sizeBytes) override;
+  GpuHandle CreateBuffer() override;
   GpuHandle CreateShader(const std::string& vertexSource, const std::string& fragmentSource,
                          const std::string& geometrySource = "") override;
   GpuHandle CreateTexture2D(const float width, const float height, bool generateMipmaps) override;
@@ -38,7 +37,9 @@ class OpenGLRenderDevice : public RenderDevice {
   void DestroyShader(GpuHandle handle) override;
 
   // ----- Buffer updates -----
-  void UpdateVertexBuffer(GpuHandle handle, std::span<const std::byte> data) override;
+  void UpdateVertexBuffer(GpuHandle handle, const size_t bytes, const void* data) override;
+  void UpdateUniformBuffer(GpuHandle handle, const size_t bytes, const void* data,
+                           const uint32_t position) override;
   void UpdateIndexBuffer(GpuHandle handle, std::span<const uint32_t> indices) override;
 
   // ----- Binding -----
@@ -46,7 +47,7 @@ class OpenGLRenderDevice : public RenderDevice {
   void BindVertexBuffer(GpuHandle handle) override;
   void SetVertexAttributes(GpuHandle handle, const std::span<VertexAttribute>& attributes) override;
   void BindIndexBuffer(GpuHandle handle) override;
-  void BindTexture(GpuHandle handle) override;
+  void BindTexture(GpuHandle handle, const uint32_t index) override;
   void BindFrameBuffer(GpuHandle handle) override;
   void BindShader(GpuHandle shaderHandle) override;
 
@@ -61,6 +62,9 @@ class OpenGLRenderDevice : public RenderDevice {
 
   // ----- Draw -----
   void DrawIndexed(PrimitiveTopology topology, std::size_t indexCount) override;
+
+  // ----- Viewport -----
+  void SetViewport(int x, int y, int width, int height) override;
 
   // ----- Frame control -----
   void BeginFrame() override;

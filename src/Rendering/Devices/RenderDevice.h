@@ -21,8 +21,7 @@ class RenderDevice {
 
   // ----- Resource creation -----
   virtual GpuHandle CreatePipeline() = 0;
-  virtual GpuHandle CreateVertexBuffer(std::size_t sizeBytes) = 0;
-  virtual GpuHandle CreateIndexBuffer(std::size_t sizeBytes) = 0;
+  virtual GpuHandle CreateBuffer() = 0;
   virtual GpuHandle CreateFrameBuffer(GpuHandle colorHandle, GpuHandle depthHandle,
                                       GpuHandle stencilHandle) = 0;
   virtual GpuHandle CreateTexture2D(const float width, const float height,
@@ -34,8 +33,9 @@ class RenderDevice {
   virtual void DestroyShader(GpuHandle handle) = 0;
 
   // ----- Buffer updates -----
-  virtual void UpdateVertexBuffer(GpuHandle handle, std::span<const std::byte> data) = 0;
-
+  virtual void UpdateVertexBuffer(GpuHandle handle, const size_t bytes, const void* data) = 0;
+  virtual void UpdateUniformBuffer(GpuHandle handle, const size_t bytes, const void* data,
+                                   const uint32_t position) = 0;
   virtual void UpdateIndexBuffer(GpuHandle handle, std::span<const uint32_t> indices) = 0;
 
   // ----- Binding -----
@@ -45,7 +45,7 @@ class RenderDevice {
                                    const std::span<VertexAttribute>& attributes) = 0;
 
   virtual void BindIndexBuffer(GpuHandle handle) = 0;
-  virtual void BindTexture(GpuHandle handle) = 0;
+  virtual void BindTexture(GpuHandle handle, const uint32_t index) = 0;
   virtual void BindFrameBuffer(GpuHandle handle) = 0;
   virtual void BindShader(GpuHandle shaderHandle) = 0;
 
@@ -58,6 +58,9 @@ class RenderDevice {
 
   // ----- Draw -----
   virtual void DrawIndexed(PrimitiveTopology topology, std::size_t indexCount) = 0;
+
+  // ----- Viewport -----
+  virtual void SetViewport(int x, int y, int width, int height) = 0;
 
   // ----- Frame control -----
   virtual void BeginFrame() = 0;

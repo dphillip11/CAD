@@ -1,35 +1,40 @@
 #pragma once
-#include <memory>
 
 #include "Rendering/Devices/GpuHandle.h"
 
-class VertexBuffer;
-class IndexBuffer;
-class ShaderProgram;
 class RenderDevice;
-class RenderTexture;
+class RenderPass;
 
 class RenderResources {
  public:
   void LoadResources(RenderDevice& device);
-  ~RenderResources();
+
+  const RenderPass BuildLinePass();
+  const RenderPass BuildFacePass();
+  const RenderPass BuildScreenPass();
 
   // vertices
-  std::unique_ptr<VertexBuffer> vertexBuffer;
-  std::unique_ptr<VertexBuffer> fullscreenQuadVertexBuffer;
+  GpuHandle vertexBuffer;
+  GpuHandle fullscreenQuadVertexBuffer;
   // indices
-  std::unique_ptr<IndexBuffer> edgeIndexBuffer;
-  std::unique_ptr<IndexBuffer> faceIndexBuffer;
-  std::unique_ptr<IndexBuffer> volumeIndexBuffer;
-  std::unique_ptr<IndexBuffer> fullscreenQuadIndexBuffer;
+  GpuHandle edgeIndexBuffer;
+  GpuHandle faceIndexBuffer;
+  GpuHandle volumeIndexBuffer;
+  GpuHandle fullscreenQuadIndexBuffer;
   // shaders
-  std::unique_ptr<ShaderProgram> basicShader;
-  std::unique_ptr<ShaderProgram> lineShader;
-  std::unique_ptr<ShaderProgram> renderToScreenShader;
+  GpuHandle basicShader;
+  GpuHandle lineShader;
+  GpuHandle screenShader;
   // render textures
-  GpuHandle combinedFramebufferHandle;
-  GpuHandle combinedRenderTextureHandle;
+  GpuHandle framebuffer0;
+  GpuHandle texture0;
+  GpuHandle framebuffer1;
+  GpuHandle texture1;
+  GpuHandle framebuffer2;
+  GpuHandle texture2;
   // vao
-  GpuHandle sharedVertexPipeline;
-  GpuHandle screenVertexPipeline;
+  GpuHandle geometryPipeline;
+  GpuHandle screenPipeline;
+  // uniforms
+  GpuHandle frameUniformBuffer;
 };

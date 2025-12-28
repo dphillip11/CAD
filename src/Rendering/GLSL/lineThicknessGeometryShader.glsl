@@ -1,10 +1,20 @@
 #version 330 core
 
+layout(std140) uniform GlobalUniforms
+{
+    vec4 lineColor;
+    vec4 faceColor;
+};
+
+uniform sampler2D tex0;
+uniform sampler2D tex1;
+uniform sampler2D tex2;
+
 layout(lines) in;
 layout(triangle_strip, max_vertices = 4) out;
 
-uniform float uThickness = 0.25f;     // line thickness in pixels
-uniform vec2 uViewportSize;   // viewport size in pixels (width, height)
+uniform float uThickness = 0.5f;     // line thickness in pixels
+uniform vec2 uViewportSize = vec2(800,600);   // viewport size in pixels (width, height)
 
 void main()
 {

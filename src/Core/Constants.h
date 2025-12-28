@@ -1,0 +1,4 @@
+#pragma once
+
+#define INITIAL_WINDOW_HEIGHT 600
+#define INITIAL_WINDOW_WIDTH 800

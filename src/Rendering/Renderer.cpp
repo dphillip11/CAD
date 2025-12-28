@@ -1,16 +1,12 @@
 #include "Renderer.h"
 
+#include <iostream>
+
 #include "Model/Model.h"
 #include "ModelView/ModelViews.h"
 #include "Rendering/Devices/RenderDevice.h"
 #include "Rendering/FrameContext.h"
-#include "Rendering/Passes/FacePass.h"
-#include "Rendering/Passes/LinePass.h"
-#include "Rendering/Passes/ScreenPass.h"
-#include "Rendering/Resources/IndexBuffer.h"
 #include "Rendering/Resources/RenderResources.h"
-#include "Rendering/Resources/ShaderProgram.h"
-#include "Rendering/Resources/VertexBuffer.h"
 #include "Utilities/Vec3.h"
 
 Renderer::Renderer(RenderDevice& device) : device_(device) { Initialise(); }
@@ -19,38 +15,31 @@ Renderer::~Renderer() = default;
 
 void Renderer::Initialise() {
   resources_.LoadResources(device_);
-  linePass_ = std::make_unique<LinePass>(device_, resources_);
-  facePass_ = std::make_unique<FacePass>(device_, resources_);
-  screenPass_ = std::make_unique<ScreenPass>(device_, resources_);
+  facePass_ = resources_.BuildFacePass();
+  linePass_ = resources_.BuildLinePass();
+  screenPass_ = resources_.BuildScreenPass();
 }
 
 void Renderer::Render(const ModelViews& views, const Model& model, const FrameContext& ctx) {
   device_.BeginFrame();
-  device_.BindPipeline(resources_.sharedVertexPipeline);
+
   UploadVerticesIfNeeded(model);
   UploadIndicesIfNeeded(views);
 
-  device_.BindFrameBuffer(resources_.combinedFramebufferHandle);
-
-  device_.BindFrameBuffer(0);
-  linePass_->Execute(device_, resources_, ctx);
-  facePass_->Execute(device_, resources_, ctx);
-
-  device_.BindPipeline(resources_.screenVertexPipeline);
-  screenPass_->Execute(device_, resources_, ctx);
+  std::cout << views.faces.vertexIndices.size() << " called as count\n";
+  // facePass_.Execute(device_, views.faces.vertexIndices.size());
+  linePass_.Execute(device_, views.lines.vertexIndices.size());
+  screenPass_.Execute(device_, 6);
 
   device_.EndFrame();
 }
 
 void Renderer::UploadVerticesIfNeeded(const Model& model) {
   if (!verticesDirty) return;
-  auto& vertexBuffer = *resources_.vertexBuffer;
 
   const auto& vertices = model.Vertices();
-  static_assert(sizeof(Vertex) == sizeof(Vec3),
-                "Vertex must have same size as Vec3 for zero-copy upload");
-  std::span<const Vec3> positions(reinterpret_cast<const Vec3*>(vertices.data()), vertices.size());
-  vertexBuffer.Upload(positions);
+  device_.UpdateVertexBuffer(resources_.vertexBuffer, vertices.size() * sizeof(Vertex),
+                             vertices.data());
   verticesDirty = false;
 }
 
@@ -63,20 +52,17 @@ void Renderer::UploadIndicesIfNeeded(const ModelViews& views) {
 
   // Upload edge indices
   if (!views.lines.vertexIndices.empty()) {
-    auto& edgeBuffer = *resources_.edgeIndexBuffer;
-    edgeBuffer.Upload(views.lines.vertexIndices);
+    device_.UpdateIndexBuffer(resources_.edgeIndexBuffer, views.lines.vertexIndices);
   }
 
   // Upload face indices
   if (!views.faces.vertexIndices.empty()) {
-    auto& faceBuffer = *resources_.faceIndexBuffer;
-    faceBuffer.Upload(views.faces.vertexIndices);
+    device_.UpdateIndexBuffer(resources_.faceIndexBuffer, views.faces.vertexIndices);
   }
 
   // Upload volume indices
   if (!views.volumes.vertexIndices.empty()) {
-    auto& volumeBuffer = *resources_.volumeIndexBuffer;
-    volumeBuffer.Upload(views.volumes.vertexIndices);
+    device_.UpdateIndexBuffer(resources_.volumeIndexBuffer, views.volumes.vertexIndices);
   }
 
   indicesDirty = false;

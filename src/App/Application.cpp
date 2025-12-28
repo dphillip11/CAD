@@ -66,14 +66,16 @@ bool Application::Start() {
   return true;
 }
 
+int count = 1;
 bool Application::Run() {
   device.PollEvents();
   if (device.ShouldClose()) {
     return false;
   }
 
-  if (renderer) {
+  if (count > 0) {
     renderer->Render(views, model, ctx);
+    count--;
   }
 
   return true;
