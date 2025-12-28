@@ -1,14 +1,20 @@
 #pragma once
 
-#include "Model/Model.h"
-#include "ModelView/ModelViews.h"
-#include "Rendering/FrameContext.h"
-#include "Rendering/Passes/RenderPass.h"
+#include <memory>
+
 #include "Rendering/Resources/RenderResources.h"
+
+class LinePass;
+class FacePass;
+class ScreenPass;
+class FrameContext;
+struct ModelViews;
+class Model;
 
 class Renderer {
  public:
   explicit Renderer(RenderDevice& device);
+  ~Renderer();
 
   void Initialise();
 
@@ -25,7 +31,11 @@ class Renderer {
  private:
   RenderDevice& device_;
   RenderResources resources_;
-  std::vector<RenderPass> passes_;
+
+  std::unique_ptr<LinePass> linePass_;
+  std::unique_ptr<FacePass> facePass_;
+  std::unique_ptr<ScreenPass> screenPass_;
+
   bool verticesDirty;
   bool indicesDirty;
 

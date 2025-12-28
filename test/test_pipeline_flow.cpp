@@ -4,13 +4,13 @@
 #include <vector>
 
 #include "ModelView/ModelViews.h"
+#include "Rendering/Devices/RenderDevice.h"
 #include "Rendering/FrameContext.h"
-#include "Rendering/IndexBuffer.h"
 #include "Rendering/Passes/FacePass.h"
 #include "Rendering/Pipeline.h"
-#include "Rendering/RenderDevice.h"
-#include "Rendering/ShaderProgram.h"
-#include "Rendering/VertexBuffer.h"
+#include "Rendering/Resources/IndexBuffer.h"
+#include "Rendering/Resources/ShaderProgram.h"
+#include "Rendering/Resources/VertexBuffer.h"
 #include "Utilities/Mat4.h"
 #include "Utilities/Vec3.h"
 

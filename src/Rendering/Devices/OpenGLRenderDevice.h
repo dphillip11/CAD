@@ -25,25 +25,34 @@ class OpenGLRenderDevice : public RenderDevice {
   ~OpenGLRenderDevice() override;
 
   // ----- Resource creation -----
-  uint32_t CreateVertexBuffer(std::size_t sizeBytes) override;
-  uint32_t CreateIndexBuffer(std::size_t sizeBytes) override;
-  uint32_t CreateShader(const std::string& vertexSource, const std::string& fragmentSource,
-                        const std::string& geometrySource = "") override;
+  GpuHandle CreatePipeline() override;
+  GpuHandle CreateVertexBuffer(std::size_t sizeBytes) override;
+  GpuHandle CreateIndexBuffer(std::size_t sizeBytes) override;
+  GpuHandle CreateShader(const std::string& vertexSource, const std::string& fragmentSource,
+                         const std::string& geometrySource = "") override;
+  GpuHandle CreateTexture2D(const float width, const float height, bool generateMipmaps) override;
+  GpuHandle CreateFrameBuffer(GpuHandle colorHandle, GpuHandle depthHandle,
+                              GpuHandle stencilHandle) override;
 
-  void DestroyBuffer(uint32_t handle) override;
-  void DestroyShader(uint32_t handle) override;
+  void DestroyBuffer(GpuHandle handle) override;
+  void DestroyShader(GpuHandle handle) override;
 
   // ----- Buffer updates -----
-  void UpdateVertexBuffer(uint32_t handle, std::span<const std::byte> data) override;
-  void UpdateIndexBuffer(uint32_t handle, std::span<const uint32_t> indices) override;
+  void UpdateVertexBuffer(GpuHandle handle, std::span<const std::byte> data) override;
+  void UpdateIndexBuffer(GpuHandle handle, std::span<const uint32_t> indices) override;
 
   // ----- Binding -----
-  void BindVertexBuffer(uint32_t handle) override;
-  void SetVertexAttributes(uint32_t handle, const std::span<VertexAttribute>& attributes) override;
-  void BindIndexBuffer(uint32_t handle) override;
-  void BindShader(uint32_t shaderHandle) override;
+  void BindPipeline(GpuHandle) override;
+  void BindVertexBuffer(GpuHandle handle) override;
+  void SetVertexAttributes(GpuHandle handle, const std::span<VertexAttribute>& attributes) override;
+  void BindIndexBuffer(GpuHandle handle) override;
+  void BindTexture(GpuHandle handle) override;
+  void BindFrameBuffer(GpuHandle handle) override;
+  void BindShader(GpuHandle shaderHandle) override;
 
   // ----- Uniforms -----
+  // template <typename T>
+  // UniformHandle SetUniform(const std::string& name, const T& vec);
   void SetUniform(const std::string& name, const Vec3& vec) override;
   void SetUniform(const std::string& name, const float valueA, const float valueB) override;
   void SetUniform(const std::string& name, const Mat4& matrix) override;
@@ -66,29 +75,10 @@ class OpenGLRenderDevice : public RenderDevice {
   void InitializeWebGL();
 
  private:
-  struct BufferInfo {
-    GLuint id = 0;
-    GLenum target = 0;
-    std::size_t size = 0;
-  };
-
-  struct ShaderInfo {
-    GLuint program = 0;
-    std::unordered_map<std::string, GLint> uniformLocations;
-  };
-
   GLFWwindow* window_ = nullptr;
   int width_ = 800;
   int height_ = 600;
-  std::unordered_map<uint32_t, BufferInfo> buffers_;
-  std::unordered_map<uint32_t, ShaderInfo> shaders_;
-  uint32_t nextHandle_ = 1;
-
-  // Current state
-  uint32_t currentVertexBuffer_ = 0;
-  uint32_t currentIndexBuffer_ = 0;
-  uint32_t currentShader_ = 0;
-  uint32_t currentVAO_ = 0;
+  GLuint currentShader_ = 0;
 
   void InitializeOpenGL();
   GLuint CompileShader(GLenum type, const std::string& source);

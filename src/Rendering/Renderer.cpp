@@ -1,56 +1,43 @@
 #include "Renderer.h"
 
-#include <iostream>
-
 #include "Model/Model.h"
+#include "ModelView/ModelViews.h"
 #include "Rendering/Devices/RenderDevice.h"
-#include "Rendering/Passes/RenderPassConfiguration.h"
+#include "Rendering/FrameContext.h"
+#include "Rendering/Passes/FacePass.h"
+#include "Rendering/Passes/LinePass.h"
+#include "Rendering/Passes/ScreenPass.h"
 #include "Rendering/Resources/IndexBuffer.h"
 #include "Rendering/Resources/RenderResources.h"
 #include "Rendering/Resources/ShaderProgram.h"
 #include "Rendering/Resources/VertexBuffer.h"
 #include "Utilities/Vec3.h"
 
-Renderer::Renderer(RenderDevice& device) : device_(device), resources_(), passes_() {
-  std::cerr << "Renderer constructor called" << std::endl;
-  Initialise();
-}
+Renderer::Renderer(RenderDevice& device) : device_(device) { Initialise(); }
+
+Renderer::~Renderer() = default;
 
 void Renderer::Initialise() {
   resources_.LoadResources(device_);
-
-  auto passConfig = RenderPassConfiguration();
-  passConfig.vertexBufferHandle = resources_.vertexBuffer->GetHandle();
-  passConfig.indexBufferHandle = resources_.faceIndexBuffer->GetHandle();
-  passConfig.topology = PrimitiveTopology::Triangles;
-  passConfig.shaderHandle = resources_.basicShader->GetHandle();
-  passConfig.rgb = {0, 0, 1};
-  passes_.emplace_back(device_, passConfig);
-
-  passConfig.indexBufferHandle = resources_.edgeIndexBuffer->GetHandle();
-  passConfig.topology = PrimitiveTopology::Lines;
-  passConfig.shaderHandle = resources_.lineShader->GetHandle();
-  passConfig.rgb = {0, 1, 0};
-  passes_.emplace_back(device_, passConfig);
-
-  device_.BindShader(passConfig.shaderHandle);
-  device_.SetUniform("uThickness", 2.0f);
-  device_.SetUniform("uViewportSize", 400.0, 400.0);
+  linePass_ = std::make_unique<LinePass>(device_, resources_);
+  facePass_ = std::make_unique<FacePass>(device_, resources_);
+  screenPass_ = std::make_unique<ScreenPass>(device_, resources_);
 }
 
 void Renderer::Render(const ModelViews& views, const Model& model, const FrameContext& ctx) {
   device_.BeginFrame();
+  device_.BindPipeline(resources_.sharedVertexPipeline);
   UploadVerticesIfNeeded(model);
   UploadIndicesIfNeeded(views);
 
-  for (auto& pass : passes_) {
-    const auto count = (pass.topology == PrimitiveTopology::Points) ? model.Vertices().size()
-                       : (pass.topology == PrimitiveTopology::Lines)
-                           ? views.lines.vertexIndices.size()
-                           : views.faces.vertexIndices.size();
+  device_.BindFrameBuffer(resources_.combinedFramebufferHandle);
 
-    pass.Execute(ctx, count);
-  }
+  device_.BindFrameBuffer(0);
+  linePass_->Execute(device_, resources_, ctx);
+  facePass_->Execute(device_, resources_, ctx);
+
+  device_.BindPipeline(resources_.screenVertexPipeline);
+  screenPass_->Execute(device_, resources_, ctx);
 
   device_.EndFrame();
 }
@@ -60,59 +47,37 @@ void Renderer::UploadVerticesIfNeeded(const Model& model) {
   auto& vertexBuffer = *resources_.vertexBuffer;
 
   const auto& vertices = model.Vertices();
-  std::vector<Vec3> positions;
-  positions.reserve(vertices.size());
-  for (const auto& v : vertices) {
-    positions.push_back(v.position);
-  }
-
-  std::cerr << "Uploading " << positions.size() << " vertices" << std::endl;
+  static_assert(sizeof(Vertex) == sizeof(Vec3),
+                "Vertex must have same size as Vec3 for zero-copy upload");
+  std::span<const Vec3> positions(reinterpret_cast<const Vec3*>(vertices.data()), vertices.size());
   vertexBuffer.Upload(positions);
-  std::cerr << "Vertices uploaded successfully" << std::endl;
   verticesDirty = false;
 }
 
-void Renderer::SetIndicesDirty() {
-  std::cout << "marking indices dirty" << std::endl;
-  indicesDirty = true;
-}
+void Renderer::SetIndicesDirty() { indicesDirty = true; }
 
 void Renderer::UploadIndicesIfNeeded(const ModelViews& views) {
   if (!indicesDirty) {
     return;
   }
 
-  // Upload edge indices (lines)
+  // Upload edge indices
   if (!views.lines.vertexIndices.empty()) {
-    std::cerr << "Uploading " << views.lines.vertexIndices.size() << " edge indices" << std::endl;
     auto& edgeBuffer = *resources_.edgeIndexBuffer;
     edgeBuffer.Upload(views.lines.vertexIndices);
-    std::cerr << "Edge indices uploaded successfully" << std::endl;
-  } else {
-    std::cerr << "No edge indices to upload" << std::endl;
   }
 
   // Upload face indices
   if (!views.faces.vertexIndices.empty()) {
-    std::cerr << "Uploading " << views.faces.vertexIndices.size() << " face indices" << std::endl;
     auto& faceBuffer = *resources_.faceIndexBuffer;
     faceBuffer.Upload(views.faces.vertexIndices);
-    std::cerr << "Face indices uploaded successfully" << std::endl;
-  } else {
-    std::cerr << "No face indices to upload" << std::endl;
   }
 
   // Upload volume indices
   if (!views.volumes.vertexIndices.empty()) {
-    std::cerr << "Uploading " << views.volumes.vertexIndices.size() << " volume indices"
-              << std::endl;
     auto& volumeBuffer = *resources_.volumeIndexBuffer;
     volumeBuffer.Upload(views.volumes.vertexIndices);
-    std::cerr << "Volume indices uploaded successfully" << std::endl;
-  } else {
-    std::cerr << "No volume indices to upload" << std::endl;
   }
 
   indicesDirty = false;
-  std::cerr << "UploadIndicesIfNeeded: COMPLETED" << std::endl;
 }

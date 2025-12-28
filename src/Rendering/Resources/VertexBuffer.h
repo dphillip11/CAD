@@ -4,6 +4,7 @@
 #include <span>
 #include <string>
 
+#include "Rendering/Devices/GpuHandle.h"
 #include "Utilities/Vec3.h"
 
 class RenderDevice;
@@ -26,6 +27,7 @@ class VertexBuffer {
 
   // Upload full vertex buffer
   void Upload(std::span<const Vec3> positions);
+  void Upload(std::span<const float> data, std::size_t vertexSize);
 
   // Bind for drawing
   void Bind() const;
@@ -43,7 +45,7 @@ class VertexBuffer {
   RenderDevice& device_;
 
   // Backend-specific handle hidden in implementation
-  uint32_t handle_ = 0;
+  GpuHandle handle_ = 0;
   std::size_t vertexCount_ = 0;
   bool dirty_ = true;
 };

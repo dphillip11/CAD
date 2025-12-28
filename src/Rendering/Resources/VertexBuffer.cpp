@@ -24,6 +24,17 @@ void VertexBuffer::Upload(std::span<const Vec3> positions) {
   dirty_ = false;
 }
 
+void VertexBuffer::Upload(std::span<const float> data, std::size_t vertexSize) {
+  vertexCount_ = data.size() / vertexSize;
+  std::size_t sizeBytes = data.size() * sizeof(float);
+
+  auto byteData =
+      std::span<const std::byte>(reinterpret_cast<const std::byte*>(data.data()), sizeBytes);
+
+  device_.UpdateVertexBuffer(handle_, byteData);
+  dirty_ = false;
+}
+
 void VertexBuffer::Bind() const { device_.BindVertexBuffer(handle_); }
 
 std::size_t VertexBuffer::VertexCount() const noexcept { return vertexCount_; }

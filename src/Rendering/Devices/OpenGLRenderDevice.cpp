@@ -51,35 +51,42 @@ void OpenGLRenderDevice::InitializeOpenGL() {
   // glEnable(GL_CULL_FACE); // Disable culling for debugging
   glFrontFace(GL_CW);  // Clockwise faces are front faces
 
-  // Create and bind a VAO for modern OpenGL
-  GLuint vao;
-  glGenVertexArrays(1, &vao);
-  glBindVertexArray(vao);
-  currentVAO_ = vao;
-
   // Set viewport to framebuffer size for retina displays
   int fbWidth, fbHeight;
-#ifndef __EMSCRIPTEN__
   glfwGetFramebufferSize(window_, &fbWidth, &fbHeight);
-#else
-  // For Emscripten, use the canvas size
-  fbWidth = width_;
-  fbHeight = height_;
-#endif
   glViewport(0, 0, fbWidth, fbHeight);
 }
 
 OpenGLRenderDevice::~OpenGLRenderDevice() {
-  // Clean up all resources
-  for (auto& [handle, buffer] : buffers_) {
-    glDeleteBuffers(1, &buffer.id);
-  }
-  buffers_.clear();
+  GLint maxBuffers, maxTextures, maxFramebuffers, maxPrograms;
 
-  for (auto& [handle, shader] : shaders_) {
-    glDeleteProgram(shader.program);
+  // Delete buffers
+  glGetIntegerv(GL_MAX_DRAW_BUFFERS, &maxBuffers);
+  for (GLint i = 1; i <= maxBuffers; ++i) {
+    GLuint bufferId = i;
+    glDeleteBuffers(1, &bufferId);
   }
-  shaders_.clear();
+
+  // Delete textures
+  glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextures);
+  for (GLint i = 1; i <= maxTextures; ++i) {
+    GLuint textureId = i;
+    glDeleteTextures(1, &textureId);
+  }
+
+  // Delete framebuffers
+  glGetIntegerv(GL_MAX_FRAMEBUFFER_WIDTH, &maxFramebuffers);
+  for (GLint i = 1; i <= maxFramebuffers; ++i) {
+    GLuint framebufferId = i;
+    glDeleteFramebuffers(1, &framebufferId);
+  }
+
+  // Delete programs
+  glGetIntegerv(GL_MAX_PROGRAM_TEXEL_OFFSET, &maxPrograms);
+  for (GLint i = 1; i <= maxPrograms; ++i) {
+    GLuint programId = i;
+    glDeleteProgram(programId);
+  }
 
   if (window_) {
     glfwDestroyWindow(window_);
@@ -87,100 +94,116 @@ OpenGLRenderDevice::~OpenGLRenderDevice() {
   }
 }
 
-uint32_t OpenGLRenderDevice::CreateVertexBuffer(std::size_t sizeBytes) {
-  GLuint bufferId;
-  glGenBuffers(1, &bufferId);
-
-  BufferInfo info;
-  info.id = bufferId;
-  info.target = GL_ARRAY_BUFFER;
-  info.size = sizeBytes;
-
-  uint32_t handle = nextHandle_++;
-  buffers_[handle] = info;
-
-  return handle;
+GpuHandle OpenGLRenderDevice::CreatePipeline() {
+  GLuint vao;
+  glGenVertexArrays(1, &vao);
+  glBindVertexArray(vao);
+  return vao;
 }
 
-uint32_t OpenGLRenderDevice::CreateIndexBuffer(std::size_t sizeBytes) {
+GpuHandle OpenGLRenderDevice::CreateVertexBuffer(std::size_t sizeBytes) {
   GLuint bufferId;
   glGenBuffers(1, &bufferId);
-
-  BufferInfo info;
-  info.id = bufferId;
-  info.target = GL_ELEMENT_ARRAY_BUFFER;
-  info.size = sizeBytes;
-
-  uint32_t handle = nextHandle_++;
-  buffers_[handle] = info;
-
-  return handle;
+  return bufferId;
 }
 
-uint32_t OpenGLRenderDevice::CreateShader(const std::string& vertexSource,
-                                          const std::string& fragmentSource,
-                                          const std::string& geometrySource) {
+GpuHandle OpenGLRenderDevice::CreateIndexBuffer(std::size_t sizeBytes) {
+  GLuint bufferId;
+  glGenBuffers(1, &bufferId);
+  return bufferId;
+}
+
+GpuHandle OpenGLRenderDevice::CreateShader(const std::string& vertexSource,
+                                           const std::string& fragmentSource,
+                                           const std::string& geometrySource) {
   GLuint program = CreateShaderProgram(vertexSource, fragmentSource, geometrySource);
   if (program == 0) {
     std::cerr << "Failed to create shader program" << std::endl;
     return 0;
   }
 
-  ShaderInfo info;
-  info.program = program;
-
-  uint32_t handle = nextHandle_++;
-  shaders_[handle] = info;
-
-  std::cout << "Created shader program with handle " << handle << std::endl;
-
-  return handle;
+  return program;
 }
 
-void OpenGLRenderDevice::DestroyBuffer(uint32_t handle) {
-  auto it = buffers_.find(handle);
-  if (it != buffers_.end()) {
-    glDeleteBuffers(1, &it->second.id);
-    buffers_.erase(it);
+GpuHandle OpenGLRenderDevice::CreateTexture2D(const float width, const float height,
+                                              bool generateMipmaps) {
+  GLuint textureId;
+  glGenTextures(1, &textureId);
+
+  glBindTexture(GL_TEXTURE_2D, textureId);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  // Allocate texture storage
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+  if (generateMipmaps) {
+    glGenerateMipmap(GL_TEXTURE_2D);
   }
+  return textureId;
 }
 
-void OpenGLRenderDevice::DestroyShader(uint32_t handle) {
-  auto it = shaders_.find(handle);
-  if (it != shaders_.end()) {
-    glDeleteProgram(it->second.program);
-    shaders_.erase(it);
+GpuHandle OpenGLRenderDevice::CreateFrameBuffer(GpuHandle colorHandle, GpuHandle depthHandle,
+                                                GpuHandle stencilHandle) {
+  GLuint fboId;
+  glGenFramebuffers(1, &fboId);
+  glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+
+  if (colorHandle != 0) {
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorHandle, 0);
   }
-}
 
-void OpenGLRenderDevice::UpdateVertexBuffer(uint32_t handle, std::span<const std::byte> data) {
-  auto it = buffers_.find(handle);
-  if (it != buffers_.end()) {
-    glBindBuffer(it->second.target, it->second.id);
-    glBufferData(it->second.target, data.size(), data.data(), GL_STATIC_DRAW);
-    glBindBuffer(it->second.target, 0);
+  // Attach depth attachment if provided
+  if (depthHandle != 0) {
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthHandle, 0);
   }
-}
 
-void OpenGLRenderDevice::UpdateIndexBuffer(uint32_t handle, std::span<const uint32_t> indices) {
-  auto it = buffers_.find(handle);
-  if (it != buffers_.end()) {
-    glBindBuffer(it->second.target, it->second.id);
-    glBufferData(it->second.target, indices.size() * sizeof(uint32_t), indices.data(),
-                 GL_STATIC_DRAW);
-    glBindBuffer(it->second.target, 0);
+  // Attach stencil attachment if provided
+  if (stencilHandle != 0) {
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, stencilHandle, 0);
   }
-}
 
-void OpenGLRenderDevice::BindVertexBuffer(uint32_t handle) {
-  auto it = buffers_.find(handle);
-  if (it != buffers_.end()) {
-    glBindBuffer(it->second.target, it->second.id);
-    currentVertexBuffer_ = handle;
+  // Check framebuffer completeness
+  GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  if (status != GL_FRAMEBUFFER_COMPLETE) {
+    std::cerr << "Framebuffer is not complete: " << status << std::endl;
+    glDeleteFramebuffers(1, &fboId);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    return 0;
   }
+
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  return fboId;
 }
 
-void OpenGLRenderDevice::SetVertexAttributes(uint32_t handle,
+void OpenGLRenderDevice::DestroyBuffer(GpuHandle handle) { glDeleteBuffers(1, &handle); }
+
+void OpenGLRenderDevice::DestroyShader(GpuHandle handle) { glDeleteProgram(handle); }
+
+void OpenGLRenderDevice::UpdateVertexBuffer(GpuHandle handle, std::span<const std::byte> data) {
+  glBindBuffer(GL_ARRAY_BUFFER, handle);
+  glBufferData(GL_ARRAY_BUFFER, data.size(), data.data(), GL_STATIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void OpenGLRenderDevice::UpdateIndexBuffer(GpuHandle handle, std::span<const uint32_t> indices) {
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), indices.data(),
+               GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void OpenGLRenderDevice::BindPipeline(GpuHandle handle) { glBindVertexArray(handle); }
+
+void OpenGLRenderDevice::BindVertexBuffer(GpuHandle handle) {
+  glBindBuffer(GL_ARRAY_BUFFER, handle);
+}
+
+void OpenGLRenderDevice::SetVertexAttributes(GpuHandle handle,
                                              const std::span<VertexAttribute>& attributes) {
   BindVertexBuffer(handle);
 
@@ -210,22 +233,22 @@ void OpenGLRenderDevice::SetVertexAttributes(uint32_t handle,
   std::cout << "SetupVertexAttributes completed" << std::endl;
 }
 
-void OpenGLRenderDevice::BindIndexBuffer(uint32_t handle) {
-  auto it = buffers_.find(handle);
-  if (it != buffers_.end()) {
-    glBindBuffer(it->second.target, it->second.id);
-    currentIndexBuffer_ = handle;
-  }
+void OpenGLRenderDevice::BindIndexBuffer(GpuHandle handle) {
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
 }
 
-void OpenGLRenderDevice::BindShader(uint32_t shaderHandle) {
-  auto it = shaders_.find(shaderHandle);
-  if (it != shaders_.end()) {
-    glUseProgram(it->second.program);
-    currentShader_ = shaderHandle;
-  } else {
-    std::cerr << "BindShader: shader handle " << shaderHandle << " not found" << std::endl;
-  }
+void OpenGLRenderDevice::BindShader(GpuHandle shaderHandle) {
+  glUseProgram(shaderHandle);
+  currentShader_ = shaderHandle;
+}
+
+void OpenGLRenderDevice::BindTexture(GpuHandle handle) {
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, handle);
+}
+
+void OpenGLRenderDevice::BindFrameBuffer(GpuHandle handle) {
+  glBindFramebuffer(GL_FRAMEBUFFER, handle);
 }
 
 void OpenGLRenderDevice::SetUniform(const std::string& name, const Vec3& vec) {
@@ -249,7 +272,6 @@ void OpenGLRenderDevice::SetUniform(const std::string& name, const Mat4& matrix)
   GLint location = GetUniformLocation(name);
 
   if (location != -1) {
-    // Assuming column-major order (OpenGL default)
     glUniformMatrix4fv(location, 1, GL_FALSE, matrix.Data());
   }
 }
@@ -273,27 +295,6 @@ void OpenGLRenderDevice::SetUniform(const std::string& name, float value) {
 void OpenGLRenderDevice::DrawIndexed(PrimitiveTopology topology, std::size_t indexCount) {
   GLenum mode = TopologyToGLenum(topology);
 
-  // Check if we have all required state
-  if (currentVertexBuffer_ == 0) {
-    std::cerr << "Error: No vertex buffer bound" << std::endl;
-    return;
-  }
-  if (currentIndexBuffer_ == 0) {
-    std::cerr << "Error: No index buffer bound" << std::endl;
-    return;
-  }
-  if (currentShader_ == 0) {
-    std::cerr << "Error: No shader bound" << std::endl;
-    return;
-  }
-  if (currentVAO_ == 0) {
-    std::cerr << "Error: No VAO bound" << std::endl;
-    return;
-  }
-
-  // Bind VAO for drawing
-  glBindVertexArray(currentVAO_);
-
   glDrawElements(mode, static_cast<GLsizei>(indexCount), GL_UNSIGNED_INT, nullptr);
 
   GLenum error = glGetError();
@@ -309,27 +310,11 @@ void OpenGLRenderDevice::BeginFrame() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void OpenGLRenderDevice::EndFrame() {
-#ifndef __EMSCRIPTEN__
-  glfwSwapBuffers(window_);
-#endif
-}
+void OpenGLRenderDevice::EndFrame() { glfwSwapBuffers(window_); }
 
-bool OpenGLRenderDevice::ShouldClose() const {
-#ifndef __EMSCRIPTEN__
-  return glfwWindowShouldClose(window_);
-#else
-  // For Emscripten, we never "close" in the traditional sense
-  // The application runs in the browser
-  return false;
-#endif
-}
+bool OpenGLRenderDevice::ShouldClose() const { return glfwWindowShouldClose(window_); }
 
-void OpenGLRenderDevice::PollEvents() {
-#ifndef __EMSCRIPTEN__
-  glfwPollEvents();
-#endif
-}
+void OpenGLRenderDevice::PollEvents() { glfwPollEvents(); }
 
 GLuint OpenGLRenderDevice::CompileShader(GLenum type, const std::string& source) {
   GLuint shader = glCreateShader(type);
@@ -479,20 +464,5 @@ std::string OpenGLRenderDevice::GetErrorString(GLenum error) const {
 }
 
 GLint OpenGLRenderDevice::GetUniformLocation(const std::string& name) {
-  GLint location = -1;
-
-  if (currentShader_ == 0) return location;
-
-  auto shaderIt = shaders_.find(currentShader_);
-  if (shaderIt == shaders_.end()) return location;
-
-  auto locIt = shaderIt->second.uniformLocations.find(name);
-  if (locIt == shaderIt->second.uniformLocations.end()) {
-    location = glGetUniformLocation(shaderIt->second.program, name.c_str());
-    shaderIt->second.uniformLocations[name] = location;
-  } else {
-    location = locIt->second;
-  }
-
-  return location;
+  return glGetUniformLocation(currentShader_, name.c_str());
 }
