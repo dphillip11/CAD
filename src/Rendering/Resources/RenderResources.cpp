@@ -63,32 +63,33 @@ void RenderResources::LoadResources(RenderDevice& device) {
   framebuffer1 = device.CreateFrameBuffer(texture1, 0, 0);
   framebuffer2 = device.CreateFrameBuffer(texture2, 0, 0);
 
-  //   screenPipeline = device.CreatePipeline();
+  screenPipeline = device.CreatePipeline();
 
-  //   fullscreenQuadVertexBuffer = device.CreateVertexBuffer(0);
-  //   fullscreenQuadIndexBuffer = device.CreateIndexBuffer(0);
+  fullscreenQuadVertexBuffer = device.CreateBuffer();
+  fullscreenQuadIndexBuffer = device.CreateBuffer();
 
-  //   std::vector<float> quadVertices = {
-  //       // Positions         // Texture Coords
-  //       -1.0f,  0.0f, 0.0f,  0.0f, 1.0f,  // Top-left
-  //       -1.0f, -1.0f, 0.0f,  0.0f, 0.0f,  // Bottom-left
-  //        0.0f, -1.0f, 0.0f,  1.0f, 0.0f,  // Bottom-right
-  //        0.0f,  0.0f, 0.0f,  1.0f, 1.0f   // Top-right
-  //   };
+  std::vector<float> quadVertices = {
+      // Positions         // Texture Coords
+      -1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  // Top-left
+      -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,  // Bottom-left
+      0.0f,  -1.0f, 0.0f, 1.0f, 0.0f,  // Bottom-right
+      0.0f,  0.0f,  0.0f, 1.0f, 1.0f   // Top-right
+  };
 
-  //   std::vector<uint32_t> quadIndices = {
-  //       0, 1, 2,  // First triangle
-  //       0, 2, 3   // Second triangle
-  //   };
+  std::vector<uint32_t> quadIndices = {
+      0, 1, 2,  // First triangle
+      0, 2, 3   // Second triangle
+  };
 
-  //   // Upload data first
-  //   device.UpdateVertexBuffer(fullscreenQuadVertexBuffer, quadVertices.size() * sizeof(float),
-  //   quadVertices.data()); device.UpdateIndexBuffer(fullscreenQuadIndexBuffer, quadIndices);
+  // Upload data first
+  device.UpdateVertexBuffer(fullscreenQuadVertexBuffer, quadVertices.size() * sizeof(float),
+                            quadVertices.data());
+  device.UpdateIndexBuffer(fullscreenQuadIndexBuffer, quadIndices);
 
-  // Then set up attributes after data is uploaded
-  //   std::vector<VertexAttribute> quadAttr = {{"aPos", 0, 3, 0},
-  //                                            {"aTexCoord", 1, 2, sizeof(float) * 3}};
-  //   device.SetVertexAttributes(fullscreenQuadVertexBuffer, quadAttr);
+  //   Then set up attributes after data is uploaded
+  std::vector<VertexAttribute> quadAttr = {{"aPos", 0, 3, 0},
+                                           {"aTexCoord", 1, 2, sizeof(float) * 3}};
+  device.SetVertexAttributes(fullscreenQuadVertexBuffer, quadAttr);
 }
 
 const RenderPass RenderResources::BuildLinePass() {
@@ -99,7 +100,7 @@ const RenderPass RenderResources::BuildLinePass() {
   pass.indexBuffer = edgeIndexBuffer;
   pass.topology = PrimitiveTopology::Lines;
   pass.shaderProgram = basicShader;
-  pass.frameBuffer = framebuffer0;
+  //   pass.frameBuffer = framebuffer0;
 
   return pass;
 }
@@ -112,7 +113,7 @@ const RenderPass RenderResources::BuildFacePass() {
   pass.indexBuffer = faceIndexBuffer;
   pass.topology = PrimitiveTopology::Triangles;
   pass.shaderProgram = basicShader;
-  pass.frameBuffer = framebuffer1;
+  // pass.frameBuffer = framebuffer1;
 
   return pass;
 }

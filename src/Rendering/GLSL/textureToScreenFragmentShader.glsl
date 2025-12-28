@@ -14,5 +14,10 @@ out vec4 FragColor;
 in vec2 TexCoord;
 
 void main() {
-    FragColor = texture(tex0, TexCoord);
+    vec4 color = texture(tex1, TexCoord);
+    if (color.x < 0.01 && color.y < 0.01 && color.z < 0.01)
+    {
+        color.w = 0.0;
+    }
+    FragColor = color;
 }
