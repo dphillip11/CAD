@@ -19,6 +19,7 @@ void RenderResources::LoadResources(RenderDevice& device) {
   // vertices
   std::vector<VertexAttribute> attr = {{"aPos", 0, 3, 0}};
   vertexBuffer = device.CreateBuffer();
+  device.BindPipeline(geometryPipeline);  // Bind VAO before setting attributes
   device.SetVertexAttributes(vertexBuffer, attr);
 
   // indices
@@ -37,7 +38,13 @@ void RenderResources::LoadResources(RenderDevice& device) {
   const std::string lineFragmentSource = IO::LoadSource("lineFragmentShader.glsl");
   const std::string textureVertexSource = IO::LoadSource("textureToScreenVertexShader.glsl");
   const std::string renderTexFragmentSource = IO::LoadSource("textureToScreenFragmentShader.glsl");
+  const std::string pointVertexSource = IO::LoadSource("pointVertex.glsl");
+  const std::string pointGeometrySource = IO::LoadSource("pointGeometry.glsl");
+  const std::string pointFragmentSource = IO::LoadSource("pointFragment.glsl");
 
+  pointShader = device.CreateShader(pointVertexSource, pointFragmentSource, pointGeometrySource);
+  device.BindShader(pointShader);
+  device.UpdateUniformBuffer(frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
   basicShader = device.CreateShader(vertexSource, fragmentSource);
   device.BindShader(basicShader);
   device.UpdateUniformBuffer(frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
@@ -90,7 +97,29 @@ void RenderResources::LoadResources(RenderDevice& device) {
   //   Then set up attributes after data is uploaded
   std::vector<VertexAttribute> quadAttr = {{"aPos", 0, 3, 0},
                                            {"aTexCoord", 1, 2, sizeof(float) * 3}};
+  device.BindPipeline(screenPipeline);  // Bind VAO before setting attributes
   device.SetVertexAttributes(fullscreenQuadVertexBuffer, quadAttr);
+}
+
+const RenderPass RenderResources::BuildPointPass() {
+  RenderPass pass;
+
+  pass.pipeline = geometryPipeline;
+  pass.vertexBuffer = vertexBuffer;
+  pass.topology = PrimitiveTopology::Points;
+  pass.shaderProgram = pointShader;
+  pass.frameBuffer = framebuffer0;
+  pass.clearOnBind = true;
+  pass.clearColor[0] = 0.0f;  // R
+  pass.clearColor[1] = 0.0f;  // G
+  pass.clearColor[2] = 0.0f;  // B
+  pass.clearColor[3] = 0.0f;  // A
+  pass.viewportX = 0;
+  pass.viewportY = 0;
+  pass.viewportWidth = fbWidth;
+  pass.viewportHeight = fbHeight;
+
+  return pass;
 }
 
 const RenderPass RenderResources::BuildFacePass() {
@@ -101,12 +130,12 @@ const RenderPass RenderResources::BuildFacePass() {
   pass.indexBuffer = faceIndexBuffer;
   pass.topology = PrimitiveTopology::Triangles;
   pass.shaderProgram = basicShader;
-  pass.frameBuffer = framebuffer0;
+  pass.frameBuffer = framebuffer2;
   pass.clearOnBind = true;
   pass.clearColor[0] = 0.0f;  // R
   pass.clearColor[1] = 0.0f;  // G
-  pass.clearColor[2] = 1.0f;  // B
-  pass.clearColor[3] = 0.5f;  // A
+  pass.clearColor[2] = 0.0f;  // B
+  pass.clearColor[3] = 0.0f;  // A
   pass.viewportX = 0;
   pass.viewportY = 0;
   pass.viewportWidth = fbWidth;
@@ -125,10 +154,10 @@ const RenderPass RenderResources::BuildLinePass() {
   pass.shaderProgram = lineShader;
   pass.frameBuffer = framebuffer1;
   pass.clearOnBind = true;
-  pass.clearColor[0] = 1.0f;  // R
+  pass.clearColor[0] = 0.0f;  // R
   pass.clearColor[1] = 0.0f;  // G
   pass.clearColor[2] = 0.0f;  // B
-  pass.clearColor[3] = 0.5f;  // A
+  pass.clearColor[3] = 0.0f;  // A
   pass.viewportX = 0;
   pass.viewportY = 0;
   pass.viewportWidth = fbWidth;
@@ -148,9 +177,9 @@ const RenderPass RenderResources::BuildScreenPass() {
   pass.frameBuffer = 0;
   pass.clearOnBind = true;
   pass.clearColor[0] = 1.0f;  // R
-  pass.clearColor[1] = 1.0f;  // G
-  pass.clearColor[2] = 1.0f;  // B
-  pass.clearColor[3] = 0.0f;  // A
+  pass.clearColor[1] = 0.2f;  // G
+  pass.clearColor[2] = 0.2f;  // B
+  pass.clearColor[3] = 1.0f;  // A
   pass.viewportX = 0;
   pass.viewportY = 0;
   pass.viewportWidth = fbWidth;

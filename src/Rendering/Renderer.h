@@ -30,6 +30,7 @@ class Renderer {
   RenderDevice& device_;
   RenderResources resources_;
 
+  RenderPass pointPass_;
   RenderPass linePass_;
   RenderPass facePass_;
   RenderPass screenPass_;

@@ -328,6 +328,26 @@ void OpenGLRenderDevice::DrawIndexed(PrimitiveTopology topology, std::size_t ind
   }
 }
 
+void OpenGLRenderDevice::Draw(PrimitiveTopology topology, std::size_t vertexCount) {
+  // Debug: Check current OpenGL state
+  GLint vao = 0;
+  glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
+
+  if (vao == 0) {
+    std::cerr << "ERROR: No VAO bound!" << std::endl;
+  }
+
+  GLenum mode = TopologyToGLenum(topology);
+
+  glDrawArrays(mode, 0, static_cast<GLsizei>(vertexCount));
+
+  GLenum error = glGetError();
+  if (error != GL_NO_ERROR) {
+    std::cerr << "OpenGL error after draw: " << error << " (" << GetErrorString(error) << ")"
+              << std::endl;
+  }
+}
+
 void OpenGLRenderDevice::SetViewport(int x, int y, int width, int height) {
   glViewport(x, y, width, height);
 }
@@ -469,7 +489,7 @@ GLenum OpenGLRenderDevice::TopologyToGLenum(PrimitiveTopology topology) const {
     case PrimitiveTopology::Triangles:
       return GL_TRIANGLES;
     default:
-      return GL_TRIANGLES;
+      return GL_POINTS;
   }
 }
 

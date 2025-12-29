@@ -15,6 +15,7 @@ Renderer::~Renderer() = default;
 
 void Renderer::Initialise() {
   resources_.LoadResources(device_);
+  pointPass_ = resources_.BuildPointPass();
   facePass_ = resources_.BuildFacePass();
   linePass_ = resources_.BuildLinePass();
   screenPass_ = resources_.BuildScreenPass();
@@ -26,6 +27,7 @@ void Renderer::Render(const ModelViews& views, const Model& model, const FrameCo
   UploadVerticesIfNeeded(model);
   UploadIndicesIfNeeded(views);
 
+  pointPass_.Execute(device_, model.Vertices().size());
   facePass_.Execute(device_, views.faces.vertexIndices.size());
   linePass_.Execute(device_, views.lines.vertexIndices.size());
   screenPass_.Execute(device_, 6);

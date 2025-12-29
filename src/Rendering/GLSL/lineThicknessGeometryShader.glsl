@@ -2,8 +2,12 @@
 
 layout(std140) uniform GlobalUniforms
 {
+    vec4 pointColor;
     vec4 lineColor;
     vec4 faceColor;
+    vec2 viewPortSize;
+    float lineThickness;
+    float axisLength;
 };
 
 uniform sampler2D tex0;
@@ -12,9 +16,6 @@ uniform sampler2D tex2;
 
 layout(lines) in;
 layout(triangle_strip, max_vertices = 4) out;
-
-uniform float uThickness = 2.0f;     // line thickness in pixels
-uniform vec2 uViewportSize = vec2(800,600);   // viewport size in pixels (width, height)
 
 void main()
 {
@@ -33,8 +34,8 @@ void main()
     vec2 normal = vec2(-dir.y, dir.x);
 
     // Convert thickness from pixels to NDC
-    vec2 pixelToNDC = vec2(2.0) / uViewportSize;
-    vec2 offset = normal * uThickness * 0.5 * pixelToNDC;
+    vec2 pixelToNDC = vec2(2.0) / viewPortSize;
+    vec2 offset = normal * lineThickness * 0.5 * pixelToNDC;
 
     // Emit quad (triangle strip)
     gl_Position = vec4((ndc0 + offset) * p0.w, p0.z, p0.w);

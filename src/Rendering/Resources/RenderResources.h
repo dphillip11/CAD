@@ -9,6 +9,7 @@ class RenderResources {
  public:
   void LoadResources(RenderDevice& device);
 
+  const RenderPass BuildPointPass();
   const RenderPass BuildLinePass();
   const RenderPass BuildFacePass();
   const RenderPass BuildScreenPass();
@@ -22,6 +23,7 @@ class RenderResources {
   GpuHandle volumeIndexBuffer;
   GpuHandle fullscreenQuadIndexBuffer;
   // shaders
+  GpuHandle pointShader;
   GpuHandle basicShader;
   GpuHandle lineShader;
   GpuHandle screenShader;

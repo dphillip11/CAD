@@ -7,7 +7,9 @@
 void RenderPass::Execute(RenderDevice& device, size_t count) const {
   device.BindPipeline(pipeline);
   device.BindVertexBuffer(vertexBuffer);
-  device.BindIndexBuffer(indexBuffer);
+  if (indexBuffer != 0) {
+    device.BindIndexBuffer(indexBuffer);
+  }
   device.BindFrameBuffer(frameBuffer);
 
   // Set viewport if specified
@@ -22,5 +24,10 @@ void RenderPass::Execute(RenderDevice& device, size_t count) const {
   }
 
   device.BindShader(shaderProgram);
-  device.DrawIndexed(topology, count);
+
+  if (indexBuffer != 0) {
+    device.DrawIndexed(topology, count);
+  } else {
+    device.Draw(topology, count);
+  }
 }

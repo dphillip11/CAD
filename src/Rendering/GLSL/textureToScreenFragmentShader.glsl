@@ -2,8 +2,12 @@
 
 layout(std140) uniform GlobalUniforms
 {
+    vec4 pointColor;
     vec4 lineColor;
     vec4 faceColor;
+    vec2 viewPortSize;
+    float lineThickness;
+    float axisLength;
 };
 
 uniform sampler2D tex0;
@@ -19,22 +23,31 @@ void main() {
     // bottom left tex0
     if (TexCoord.x < 1.0f && TexCoord.y < 1.0f)
     {
-        vec4 t0 = texture(tex0, TexCoord);
-        // Debug: Add weak red tint to verify this is the bottom-left quadrant sampling tex0
-        color = t0 + vec4(0.1, 0.0, 0.0, 0.0);
+        color = texture(tex0, TexCoord);
     }
     // bottom right tex1
     else if (TexCoord.y < 1.0f)
     {
-        vec4 t1 = texture(tex1, vec2(TexCoord.x - 1.0f, TexCoord.y));
-        // Debug: Add weak blue tint to verify this is the bottom-right quadrant sampling tex1
-        // If t1 is empty/black, this will show as dark blue
-        color = t1 + vec4(0.0, 0.0, 0.1, 0.0);
+        color = texture(tex1, vec2(TexCoord.x - 1.0f, TexCoord.y));
     }
-    else 
+    else if (TexCoord.x < 1.0f)
     {
-        // Top half - debug gray
-        color = vec4(0.2, 0.2, 0.2, 0.1);
+        color = texture(tex2, vec2(TexCoord.x, TexCoord.y - 1.0f));
+    }
+    else
+    {
+        vec2 position = TexCoord - vec2(1);
+        vec4 t2 = texture(tex2, position);
+        vec4 t1 = texture(tex1, position);
+        vec4 t0 = texture(tex0, position);
+        
+        if (t0.a > 0.0) {
+            color = t0;
+        } else if (t1.a > 0.0) {
+            color = t1;
+        } else {
+            color = t2;
+        }
     }
     
     FragColor = color;

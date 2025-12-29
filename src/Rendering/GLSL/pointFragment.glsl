@@ -1,5 +1,4 @@
 #version 330 core
-out vec4 FragColor;
 
 layout(std140) uniform GlobalUniforms
 {
@@ -11,10 +10,9 @@ layout(std140) uniform GlobalUniforms
     float axisLength;
 };
 
-uniform sampler2D tex0;
-uniform sampler2D tex1;
-uniform sampler2D tex2;
+in vec4 gColor;
+out vec4 FragColor;
 
 void main() {
-    FragColor = faceColor;
+    FragColor = gColor;
 }

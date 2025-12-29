@@ -58,6 +58,7 @@ class RenderDevice {
 
   // ----- Draw -----
   virtual void DrawIndexed(PrimitiveTopology topology, std::size_t indexCount) = 0;
+  virtual void Draw(PrimitiveTopology topology, std::size_t vertexCount) = 0;
 
   // ----- Viewport -----
   virtual void SetViewport(int x, int y, int width, int height) = 0;

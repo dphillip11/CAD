@@ -62,6 +62,7 @@ class OpenGLRenderDevice : public RenderDevice {
 
   // ----- Draw -----
   void DrawIndexed(PrimitiveTopology topology, std::size_t indexCount) override;
+  void Draw(PrimitiveTopology topology, std::size_t vertexCount) override;
 
   // ----- Viewport -----
   void SetViewport(int x, int y, int width, int height) override;
