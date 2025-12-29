@@ -80,8 +80,8 @@ class OpenGLRenderDevice : public RenderDevice {
   void PollEvents();
 
   // ----- Framebuffer size -----
-  int GetFramebufferWidth() const { return fbWidth_; }
-  int GetFramebufferHeight() const { return fbHeight_; }
+  int GetFramebufferWidth() const override { return fbWidth_; }
+  int GetFramebufferHeight() const override { return fbHeight_; }
 
   // ----- Emscripten WebGL initialization -----
   void InitializeWebGL();

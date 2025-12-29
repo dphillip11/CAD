@@ -52,6 +52,10 @@ void OpenGLRenderDevice::InitializeOpenGL() {
   // glEnable(GL_CULL_FACE); // Disable culling for debugging
   glFrontFace(GL_CW);  // Clockwise faces are front faces
 
+  // Enable alpha blending for transparency
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
   // Set viewport to framebuffer size for retina displays
   glfwGetFramebufferSize(window_, &fbWidth_, &fbHeight_);
   glViewport(0, 0, fbWidth_, fbHeight_);
@@ -335,7 +339,7 @@ void OpenGLRenderDevice::SetClearColor(float r, float g, float b, float a) {
 void OpenGLRenderDevice::Clear() { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
 
 void OpenGLRenderDevice::BeginFrame() {
-  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);  // White background
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 

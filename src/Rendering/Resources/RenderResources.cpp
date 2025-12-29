@@ -101,7 +101,7 @@ const RenderPass RenderResources::BuildFacePass() {
   pass.clearColor[0] = 0.0f;  // R
   pass.clearColor[1] = 0.0f;  // G
   pass.clearColor[2] = 1.0f;  // B
-  pass.clearColor[3] = 0.0f;  // A
+  pass.clearColor[3] = 0.5f;  // A
   pass.viewportX = 0;
   pass.viewportY = 0;
   pass.viewportWidth = fbWidth;
@@ -123,7 +123,7 @@ const RenderPass RenderResources::BuildLinePass() {
   pass.clearColor[0] = 1.0f;  // R
   pass.clearColor[1] = 0.0f;  // G
   pass.clearColor[2] = 0.0f;  // B
-  pass.clearColor[3] = 0.0f;  // A
+  pass.clearColor[3] = 0.5f;  // A
   pass.viewportX = 0;
   pass.viewportY = 0;
   pass.viewportWidth = fbWidth;
@@ -140,8 +140,12 @@ const RenderPass RenderResources::BuildScreenPass() {
   pass.indexBuffer = fullscreenQuadIndexBuffer;
   pass.topology = PrimitiveTopology::Triangles;
   pass.shaderProgram = screenShader;
-  pass.frameBuffer = 0;      // Bind to default framebuffer to render to screen
-  pass.clearOnBind = false;  // Don't clear the screen pass (already cleared in BeginFrame)
+  pass.frameBuffer = 0;
+  pass.clearOnBind = true;
+  pass.clearColor[0] = 1.0f;  // R
+  pass.clearColor[1] = 1.0f;  // G
+  pass.clearColor[2] = 1.0f;  // B
+  pass.clearColor[3] = 0.0f;  // A
   pass.viewportX = 0;
   pass.viewportY = 0;
   pass.viewportWidth = fbWidth;

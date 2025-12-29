@@ -34,7 +34,7 @@ void main() {
     else 
     {
         // Top half - debug gray
-        color = vec4(0.2, 0.2, 0.2, 1.0);
+        color = vec4(0.2, 0.2, 0.2, 0.1);
     }
     
     FragColor = color;

@@ -12,5 +12,5 @@ uniform sampler2D tex1;
 uniform sampler2D tex2;
 
 void main() {
-    FragColor = lineColor;  // Use lineColor for line rendering
+    FragColor = vec4(1,1,0,1);  // Use lineColor for line rendering
 }

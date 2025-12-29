@@ -16,9 +16,7 @@ void RenderPass::Execute(RenderDevice& device, size_t count) const {
   }
 
   // Apply clear settings if configured
-  if (clearOnBind && frameBuffer != 0) {
-    std::cout << "Clearing FBO " << frameBuffer << " to (" << clearColor[0] << ", " << clearColor[1]
-              << ", " << clearColor[2] << ", " << clearColor[3] << ")" << std::endl;
+  if (clearOnBind) {
     device.SetClearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
     device.Clear();
   }
