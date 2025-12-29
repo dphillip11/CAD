@@ -13,7 +13,7 @@ uniform sampler2D tex2;
 layout(lines) in;
 layout(triangle_strip, max_vertices = 4) out;
 
-uniform float uThickness = 0.5f;     // line thickness in pixels
+uniform float uThickness = 2.0f;     // line thickness in pixels
 uniform vec2 uViewportSize = vec2(800,600);   // viewport size in pixels (width, height)
 
 void main()

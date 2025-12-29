@@ -62,6 +62,10 @@ class RenderDevice {
   // ----- Viewport -----
   virtual void SetViewport(int x, int y, int width, int height) = 0;
 
+  // ----- Clear -----
+  virtual void SetClearColor(float r, float g, float b, float a) = 0;
+  virtual void Clear() = 0;
+
   // ----- Frame control -----
   virtual void BeginFrame() = 0;
   virtual void EndFrame() = 0;

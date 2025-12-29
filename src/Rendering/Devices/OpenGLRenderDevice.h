@@ -66,6 +66,10 @@ class OpenGLRenderDevice : public RenderDevice {
   // ----- Viewport -----
   void SetViewport(int x, int y, int width, int height) override;
 
+  // ----- Clear -----
+  void SetClearColor(float r, float g, float b, float a) override;
+  void Clear() override;
+
   // ----- Frame control -----
   void BeginFrame() override;
   void EndFrame() override;

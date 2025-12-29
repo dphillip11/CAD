@@ -18,7 +18,6 @@ void Renderer::Initialise() {
   facePass_ = resources_.BuildFacePass();
   linePass_ = resources_.BuildLinePass();
   screenPass_ = resources_.BuildScreenPass();
-  device_.SetViewport(0, 0, 800, 600);
 }
 
 void Renderer::Render(const ModelViews& views, const Model& model, const FrameContext& ctx) {

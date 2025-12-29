@@ -14,10 +14,28 @@ out vec4 FragColor;
 in vec2 TexCoord;
 
 void main() {
-    vec4 color = texture(tex0, TexCoord);
-    if (color.x < 0.01 && color.y < 0.01 && color.z < 0.01)
+    vec4 color = vec4(0);
+
+    // bottom left tex0
+    if (TexCoord.x < 1.0f && TexCoord.y < 1.0f)
     {
-        color.w = 0.0;
+        vec4 t0 = texture(tex0, TexCoord);
+        // Debug: Add weak red tint to verify this is the bottom-left quadrant sampling tex0
+        color = t0 + vec4(0.1, 0.0, 0.0, 0.0);
     }
+    // bottom right tex1
+    else if (TexCoord.y < 1.0f)
+    {
+        vec4 t1 = texture(tex1, vec2(TexCoord.x - 1.0f, TexCoord.y));
+        // Debug: Add weak blue tint to verify this is the bottom-right quadrant sampling tex1
+        // If t1 is empty/black, this will show as dark blue
+        color = t1 + vec4(0.0, 0.0, 0.1, 0.0);
+    }
+    else 
+    {
+        // Top half - debug gray
+        color = vec4(0.2, 0.2, 0.2, 1.0);
+    }
+    
     FragColor = color;
 }

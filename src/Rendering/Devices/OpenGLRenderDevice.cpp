@@ -189,17 +189,19 @@ void OpenGLRenderDevice::UpdateVertexBuffer(GpuHandle handle, const size_t bytes
 void OpenGLRenderDevice::UpdateUniformBuffer(GpuHandle handle, const size_t bytes, const void* data,
                                              const uint32_t position) {
   glBindBuffer(GL_UNIFORM_BUFFER, handle);
-  glBufferData(GL_ARRAY_BUFFER, bytes, data, GL_DYNAMIC_DRAW);
-  glBufferData(GL_UNIFORM_BUFFER, bytes, nullptr, GL_DYNAMIC_DRAW);
+  glBufferData(GL_UNIFORM_BUFFER, bytes, data, GL_DYNAMIC_DRAW);
 
   glBindBufferBase(GL_UNIFORM_BUFFER, position, handle);
 
-  GLuint blockIndex = glGetUniformBlockIndex(currentShader_, "GlobalUniforms");
-  glUniformBlockBinding(currentShader_, blockIndex, 0);
+  if (currentShader_ != 0) {
+    GLuint blockIndex = glGetUniformBlockIndex(currentShader_, "GlobalUniforms");
+    if (blockIndex != GL_INVALID_INDEX) {
+      glUniformBlockBinding(currentShader_, blockIndex, position);
+    }
+  }
 }
 
 void OpenGLRenderDevice::UpdateIndexBuffer(GpuHandle handle, std::span<const uint32_t> indices) {
-  std::cout << indices.size() * sizeof(uint32_t) << " expected \n";
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), indices.data(),
                GL_STATIC_DRAW);
@@ -224,10 +226,6 @@ void OpenGLRenderDevice::SetVertexAttributes(GpuHandle handle,
   stride *= sizeof(float);
 
   for (const VertexAttribute& attribute : attributes) {
-    std::cout << "Setting up vertex attribute: " << attribute.name
-              << " location=" << attribute.location << ", size=" << attribute.size
-              << ", offset=" << attribute.offset << ", stride=" << stride << std::endl;
-
     glEnableVertexAttribArray(attribute.location);
     glVertexAttribPointer(attribute.location,
                           attribute.size,  // 3 for Vec3
@@ -239,7 +237,6 @@ void OpenGLRenderDevice::SetVertexAttributes(GpuHandle handle,
                 << GetErrorString(error) << std::endl;
     }
   }
-  std::cout << "SetupVertexAttributes completed" << std::endl;
 }
 
 void OpenGLRenderDevice::BindIndexBuffer(GpuHandle handle) {
@@ -303,13 +300,9 @@ void OpenGLRenderDevice::SetUniform(const std::string& name, float value) {
 
 void OpenGLRenderDevice::DrawIndexed(PrimitiveTopology topology, std::size_t indexCount) {
   // Debug: Check current OpenGL state
-  GLint vao = 0, vbo = 0, ebo = 0;
+  GLint vao = 0, ebo = 0;
   glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
-  glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &vbo);
   glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &ebo);
-
-  std::cout << "DrawIndexed - VAO: " << vao << ", VBO: " << vbo << ", EBO: " << ebo
-            << ", IndexCount: " << indexCount << std::endl;
 
   if (vao == 0) {
     std::cerr << "ERROR: No VAO bound!" << std::endl;
@@ -317,12 +310,6 @@ void OpenGLRenderDevice::DrawIndexed(PrimitiveTopology topology, std::size_t ind
   if (ebo == 0) {
     std::cerr << "ERROR: No index buffer bound!" << std::endl;
   }
-
-  GLint eboSize = 0;
-
-  glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &eboSize);
-
-  std::cout << "EBO size (bytes): " << eboSize << std::endl;
 
   GLenum mode = TopologyToGLenum(topology);
 
@@ -339,9 +326,14 @@ void OpenGLRenderDevice::SetViewport(int x, int y, int width, int height) {
   glViewport(x, y, width, height);
 }
 
+void OpenGLRenderDevice::SetClearColor(float r, float g, float b, float a) {
+  glClearColor(r, g, b, a);
+}
+
+void OpenGLRenderDevice::Clear() { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
+
 void OpenGLRenderDevice::BeginFrame() {
-  // Set clear color to bright red for testing
-  glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 

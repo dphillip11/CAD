@@ -16,4 +16,8 @@ struct RenderPass {
   GpuHandle frameBuffer = 0;
   GpuHandle shaderProgram = 0;
   PrimitiveTopology topology;
+
+  // Clear settings
+  bool clearOnBind = true;
+  float clearColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 };
