@@ -53,9 +53,11 @@ void OpenGLRenderDevice::InitializeOpenGL() {
   glFrontFace(GL_CW);  // Clockwise faces are front faces
 
   // Set viewport to framebuffer size for retina displays
-  int fbWidth, fbHeight;
-  glfwGetFramebufferSize(window_, &fbWidth, &fbHeight);
-  glViewport(0, 0, fbWidth, fbHeight);
+  glfwGetFramebufferSize(window_, &fbWidth_, &fbHeight_);
+  glViewport(0, 0, fbWidth_, fbHeight_);
+
+  std::cout << "Window size: " << width_ << "x" << height_ << std::endl;
+  std::cout << "Framebuffer size: " << fbWidth_ << "x" << fbHeight_ << std::endl;
 }
 
 OpenGLRenderDevice::~OpenGLRenderDevice() {

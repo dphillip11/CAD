@@ -10,6 +10,10 @@
 #include "Utilities/IO.h"
 
 void RenderResources::LoadResources(RenderDevice& device) {
+  // Store framebuffer dimensions
+  fbWidth = device.GetFramebufferWidth();
+  fbHeight = device.GetFramebufferHeight();
+
   geometryPipeline = device.CreatePipeline();
 
   // vertices
@@ -42,10 +46,10 @@ void RenderResources::LoadResources(RenderDevice& device) {
   device.SetUniform("tex1", 1);
   device.SetUniform("tex2", 2);
 
-  // render textures
-  texture0 = device.CreateTexture2D(INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT, false);
-  texture1 = device.CreateTexture2D(INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT, false);
-  texture2 = device.CreateTexture2D(INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT, false);
+  // render textures - use actual framebuffer size
+  texture0 = device.CreateTexture2D(fbWidth, fbHeight, false);
+  texture1 = device.CreateTexture2D(fbWidth, fbHeight, false);
+  texture2 = device.CreateTexture2D(fbWidth, fbHeight, false);
 
   device.BindTexture(texture0, 0);
   device.BindTexture(texture1, 1);
@@ -98,6 +102,10 @@ const RenderPass RenderResources::BuildFacePass() {
   pass.clearColor[1] = 0.0f;  // G
   pass.clearColor[2] = 1.0f;  // B
   pass.clearColor[3] = 0.0f;  // A
+  pass.viewportX = 0;
+  pass.viewportY = 0;
+  pass.viewportWidth = fbWidth;
+  pass.viewportHeight = fbHeight;
 
   return pass;
 }
@@ -116,6 +124,10 @@ const RenderPass RenderResources::BuildLinePass() {
   pass.clearColor[1] = 0.0f;  // G
   pass.clearColor[2] = 0.0f;  // B
   pass.clearColor[3] = 0.0f;  // A
+  pass.viewportX = 0;
+  pass.viewportY = 0;
+  pass.viewportWidth = fbWidth;
+  pass.viewportHeight = fbHeight;
 
   return pass;
 }
@@ -130,6 +142,10 @@ const RenderPass RenderResources::BuildScreenPass() {
   pass.shaderProgram = screenShader;
   pass.frameBuffer = 0;      // Bind to default framebuffer to render to screen
   pass.clearOnBind = false;  // Don't clear the screen pass (already cleared in BeginFrame)
+  pass.viewportX = 0;
+  pass.viewportY = 0;
+  pass.viewportWidth = fbWidth;
+  pass.viewportHeight = fbHeight;
 
   return pass;
 }

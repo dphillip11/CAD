@@ -79,6 +79,10 @@ class OpenGLRenderDevice : public RenderDevice {
   bool ShouldClose() const;
   void PollEvents();
 
+  // ----- Framebuffer size -----
+  int GetFramebufferWidth() const { return fbWidth_; }
+  int GetFramebufferHeight() const { return fbHeight_; }
+
   // ----- Emscripten WebGL initialization -----
   void InitializeWebGL();
 
@@ -86,6 +90,8 @@ class OpenGLRenderDevice : public RenderDevice {
   GLFWwindow* window_ = nullptr;
   int width_ = 800;
   int height_ = 600;
+  int fbWidth_ = 800;
+  int fbHeight_ = 600;
   GLuint currentShader_ = 0;
 
   void InitializeOpenGL();

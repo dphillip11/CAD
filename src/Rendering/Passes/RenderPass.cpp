@@ -10,6 +10,11 @@ void RenderPass::Execute(RenderDevice& device, size_t count) const {
   device.BindIndexBuffer(indexBuffer);
   device.BindFrameBuffer(frameBuffer);
 
+  // Set viewport if specified
+  if (viewportWidth > 0 && viewportHeight > 0) {
+    device.SetViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+  }
+
   // Apply clear settings if configured
   if (clearOnBind && frameBuffer != 0) {
     std::cout << "Clearing FBO " << frameBuffer << " to (" << clearColor[0] << ", " << clearColor[1]

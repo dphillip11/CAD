@@ -37,4 +37,8 @@ class RenderResources {
   GpuHandle screenPipeline;
   // uniforms
   GpuHandle frameUniformBuffer;
+
+  // framebuffer dimensions
+  int fbWidth = 0;
+  int fbHeight = 0;
 };

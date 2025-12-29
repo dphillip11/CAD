@@ -69,4 +69,8 @@ class RenderDevice {
   // ----- Frame control -----
   virtual void BeginFrame() = 0;
   virtual void EndFrame() = 0;
+
+  // ----- Framebuffer dimensions -----
+  virtual int GetFramebufferWidth() const = 0;
+  virtual int GetFramebufferHeight() const = 0;
 };
