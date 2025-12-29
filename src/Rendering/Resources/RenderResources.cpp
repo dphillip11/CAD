@@ -39,9 +39,14 @@ void RenderResources::LoadResources(RenderDevice& device) {
   const std::string renderTexFragmentSource = IO::LoadSource("textureToScreenFragmentShader.glsl");
 
   basicShader = device.CreateShader(vertexSource, fragmentSource);
+  device.BindShader(basicShader);
+  device.UpdateUniformBuffer(frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
   lineShader = device.CreateShader(vertexSource, lineFragmentSource, geometrySource);
+  device.BindShader(lineShader);
+  device.UpdateUniformBuffer(frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
   screenShader = device.CreateShader(textureVertexSource, renderTexFragmentSource);
   device.BindShader(screenShader);
+  device.UpdateUniformBuffer(frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
   device.SetUniform("tex0", 0);
   device.SetUniform("tex1", 1);
   device.SetUniform("tex2", 2);
