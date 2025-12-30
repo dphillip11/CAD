@@ -111,3 +111,51 @@ class SparseSet {
   std::vector<uint32_t> sparse_;
   std::vector<Id> free_ids_;
 };
+
+template <typename T>
+class DirtySparseSet {
+ public:
+  DirtySparseSet(bool& dirtyFlag) : dirtyFlag_(dirtyFlag) {}
+
+  // Insert by forwarding arguments
+  template <typename... Args>
+  Id Emplace(Args&&... args) {
+    dirtyFlag_ = true;
+    return sparse_.Emplace(std::forward<Args>(args)...);
+  }
+
+  // Insert by copy
+  Id Insert(const T& value) {
+    dirtyFlag_ = true;
+    return sparse_.Insert(value);
+  }
+
+  // Remove element using end-swap erase
+  void Remove(Id id) {
+    dirtyFlag_ = true;
+    sparse_.Remove(id);
+  }
+
+  bool Contains(Id id) const { return sparse_.Contains(id); }
+
+  T& Get(Id id) { return sparse_.Get(id); }
+
+  const T& Get(Id id) const { return sparse_.Get(id); }
+
+  T& operator[](Id id) { return sparse_.operator[](id); }
+
+  const T& operator[](Id id) const { return sparse_.operator[](id); }
+
+  std::vector<T> Get(std::span<const Id> ids) const { return sparse_.Get(ids); }
+
+  // Use for building GPU index buffers
+  uint32_t DenseIndex(Id id) const { return sparse_.DenseIndex(id); }
+
+  uint32_t DenseCount() const { return sparse_.DenseCount(); }
+
+  const std::vector<T>& Dense() const { return sparse_.Dense(); }
+
+ private:
+  SparseSet<T> sparse_;
+  bool& dirtyFlag_;
+};

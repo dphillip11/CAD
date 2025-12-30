@@ -8,6 +8,8 @@
 
 class Model {
  public:
+  Model();
+
   // ---- Vertex -------------------------------------------------
   VertexId CreateVertex(const Vec3& position);
   bool RemoveVertex(VertexId id);
@@ -50,10 +52,10 @@ class Model {
   uint32_t VertexIdToIndex(VertexId id) const;
 
  private:
-  SparseSet<Vertex> vertices_;
-  SparseSet<Edge> edges_;
-  SparseSet<Face> faces_;
-  SparseSet<Volume> volumes_;
+  DirtySparseSet<Vertex> vertices_;
+  DirtySparseSet<Edge> edges_;
+  DirtySparseSet<Face> faces_;
+  DirtySparseSet<Volume> volumes_;
 
   // Centralized validation hooks
   bool CanCreateEdge(VertexId a, VertexId b) const;

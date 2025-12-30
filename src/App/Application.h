@@ -26,6 +26,6 @@ class Application {
   ModelViewBuilder viewBuilder{model};
   ModelViews views;
   RenderDeviceType device;
-  std::unique_ptr<Renderer> renderer;
+  Renderer renderer;
   FrameContext ctx;
 };

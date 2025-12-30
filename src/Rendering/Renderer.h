@@ -16,15 +16,16 @@ class Renderer {
 
   void Initialise();
 
-  void Render(const ModelViews& views, const Model& model, const FrameContext& ctx);
-
-  void Resize(uint32_t width, uint32_t height);
-
-  void SetVerticesDirty() { verticesDirty = true; }
-
-  void SetIndicesDirty();
+  void Render(const ModelViews& views, const Model& model);
 
   RenderResources resources;
+
+  void Resize(uint32_t width, uint32_t height);
+  void UpdateVertices(const Model& model);
+  void UpdateEdgeIndices(const ModelViews& views);
+  void UpdateFaceIndices(const ModelViews& views);
+  void UpdateVolumeIndices(const ModelViews& views);
+  void UpdateFrameContext(const FrameContext& context);
 
  private:
   RenderDevice& device_;
@@ -34,10 +35,4 @@ class Renderer {
   RenderPass linePass_;
   RenderPass facePass_;
   RenderPass screenPass_;
-
-  bool verticesDirty;
-  bool indicesDirty;
-
-  void UploadVerticesIfNeeded(const Model& model);
-  void UploadIndicesIfNeeded(const ModelViews& views);
 };

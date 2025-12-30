@@ -2,11 +2,18 @@
 
 #include <cassert>
 
+#include "Core/Events.h"
 #include "Core/Primitives.h"
 #include "Geometry/Geometry.h"
 #include "Topology/Tools.h"
 #include "Topology/Validation.h"
 #include "Utilities/Mapped.h"
+
+Model::Model()
+    : vertices_(Events::verticesDirty),
+      edges_(Events::edgeIndicesDirty),
+      faces_(Events::faceIndicesDirty),
+      volumes_(Events::volumeIndicesDirty) {}
 
 VertexId Model::CreateVertex(const Vec3& position) {
   Vertex v{};

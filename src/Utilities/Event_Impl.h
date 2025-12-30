@@ -38,14 +38,14 @@ template <typename... Args>
 Event<Args...>::Listener::Listener(std::function<void(Args...)> callback, Event<Args...>* Event)
     : callback_(callback), event_(Event) {
   if (event_) {
-    _Event->_Listeners.insert(this);
+    event_->listeners_.insert(this);
   }
 }
 
 template <typename... Args>
 Event<Args...>::Listener::~Listener() {
   if (event_) {
-    event +->listeners_.erase(this);
+    event_->listeners_.erase(this);
   }
 }
 

@@ -21,11 +21,8 @@ void Renderer::Initialise() {
   screenPass_ = resources_.BuildScreenPass();
 }
 
-void Renderer::Render(const ModelViews& views, const Model& model, const FrameContext& ctx) {
+void Renderer::Render(const ModelViews& views, const Model& model) {
   device_.BeginFrame();
-
-  UploadVerticesIfNeeded(model);
-  UploadIndicesIfNeeded(views);
 
   pointPass_.Execute(device_, model.Vertices().size());
   facePass_.Execute(device_, views.faces.vertexIndices.size());
@@ -35,36 +32,31 @@ void Renderer::Render(const ModelViews& views, const Model& model, const FrameCo
   device_.EndFrame();
 }
 
-void Renderer::UploadVerticesIfNeeded(const Model& model) {
-  if (!verticesDirty) return;
-
+void Renderer::UpdateVertices(const Model& model) {
   const auto& vertices = model.Vertices();
   device_.UpdateVertexBuffer(resources_.vertexBuffer, vertices.size() * sizeof(Vertex),
                              vertices.data());
-  verticesDirty = false;
 }
 
-void Renderer::SetIndicesDirty() { indicesDirty = true; }
-
-void Renderer::UploadIndicesIfNeeded(const ModelViews& views) {
-  if (!indicesDirty) {
-    return;
-  }
-
+void Renderer::UpdateEdgeIndices(const ModelViews& views) {
   // Upload edge indices
   if (!views.lines.vertexIndices.empty()) {
     device_.UpdateIndexBuffer(resources_.edgeIndexBuffer, views.lines.vertexIndices);
   }
+}
 
+void Renderer::UpdateFaceIndices(const ModelViews& views) {
   // Upload face indices
   if (!views.faces.vertexIndices.empty()) {
     device_.UpdateIndexBuffer(resources_.faceIndexBuffer, views.faces.vertexIndices);
   }
+}
 
+void Renderer::UpdateVolumeIndices(const ModelViews& views) {
   // Upload volume indices
   if (!views.volumes.vertexIndices.empty()) {
     device_.UpdateIndexBuffer(resources_.volumeIndexBuffer, views.volumes.vertexIndices);
   }
-
-  indicesDirty = false;
 }
+
+void Renderer::UpdateFrameContext(const FrameContext& context) {}

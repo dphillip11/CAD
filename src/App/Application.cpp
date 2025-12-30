@@ -2,11 +2,13 @@
 
 #include <array>
 #include <chrono>
+#include <iostream>
 
+#include "Core/Events.h"
 #include "Utilities/Mat4.h"
 #include "Utilities/Vec3.h"
 
-Application::Application() : device(), renderer(std::make_unique<Renderer>(device)) {}
+Application::Application() : device(), renderer(device) {}
 
 Application::~Application() = default;
 
@@ -54,28 +56,45 @@ bool Application::Start() {
   std::array<EdgeId, 4> leftEdges = {e3, e8, e7, e11};
   model.CreateFace(leftEdges);
 
-  // Build views
-  viewBuilder.BuildFaceView(views.faces);
-  viewBuilder.BuildLineView(views.lines);
-
-  renderer->SetVerticesDirty();
-  renderer->SetIndicesDirty();
-
   ctx.viewportWidth = 800;
   ctx.viewportHeight = 600;
+
   return true;
 }
 
-int count = 1;
 bool Application::Run() {
   device.PollEvents();
+
   if (device.ShouldClose()) {
     return false;
   }
 
-  if (count > 0) {
-    renderer->Render(views, model, ctx);
-    count--;
+  if (Events::verticesDirty) {
+    renderer.UpdateVertices(model);
+  }
+
+  if (Events::edgeIndicesDirty) {
+    viewBuilder.BuildLineView(views.lines);
+    renderer.UpdateEdgeIndices(views);
+  }
+
+  if (Events::faceIndicesDirty) {
+    viewBuilder.BuildFaceView(views.faces);
+    renderer.UpdateFaceIndices(views);
+  }
+
+  if (Events::volumeIndicesDirty) {
+    viewBuilder.BuildVolumeView(views.faces);
+    renderer.UpdateVolumeIndices(views);
+  }
+
+  if (Events::frameContextDirty) {
+    renderer.UpdateFrameContext(ctx);
+  }
+
+  if (Events::ShouldRender()) {
+    renderer.Render(views, model);
+    Events::ResetDirtyFlags();
   }
 
   return true;
