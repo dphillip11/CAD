@@ -1,70 +1,16 @@
-#include "OpenGLRenderDevice.h"
-
 #include <cassert>
 #include <cstring>
 #include <iostream>
 #include <vector>
 
+#include "RenderDevice.h"
 #include "Rendering/Resources/VertexAttribute.h"
 #include "Utilities/Mat4.h"
 #include "Utilities/Vec3.h"
 
-OpenGLRenderDevice::OpenGLRenderDevice(int width, int height) : width_(width), height_(height) {
-  if (!glfwInit()) {
-    throw std::runtime_error("Failed to initialize GLFW");
-  }
+// Constructor and InitializePlatform are in platform-specific files
 
-  // Set GLFW options
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-  // Create window
-  window_ = glfwCreateWindow(width, height, "CAD Application", nullptr, nullptr);
-  if (!window_) {
-    glfwTerminate();
-    throw std::runtime_error("Failed to initialize GLFW window");
-  }
-
-  glfwShowWindow(window_);
-  glfwMakeContextCurrent(window_);
-
-  // Initialize GLEW
-  glewExperimental = GL_TRUE;
-  if (glewInit() != GLEW_OK) {
-    glfwTerminate();
-    throw std::runtime_error("Failed to initialize GLEW");
-  }
-
-  InitializeOpenGL();
-  std::cout << "OpenGL initialized successfully" << std::endl;
-  std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
-  std::cout << "GLSL version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
-}
-
-void OpenGLRenderDevice::InitializeOpenGL() {
-  // Enable depth testing
-  glEnable(GL_DEPTH_TEST);
-  // glEnable(GL_CULL_FACE); // Disable culling for debugging
-  glFrontFace(GL_CW);  // Clockwise faces are front faces
-
-  // Enable alpha blending for transparency
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-  // Set viewport to framebuffer size for retina displays
-  glfwGetFramebufferSize(window_, &fbWidth_, &fbHeight_);
-  glViewport(0, 0, fbWidth_, fbHeight_);
-
-  std::cout << "Window size: " << width_ << "x" << height_ << std::endl;
-  std::cout << "Framebuffer size: " << fbWidth_ << "x" << fbHeight_ << std::endl;
-}
-
-OpenGLRenderDevice::~OpenGLRenderDevice() {
+RenderDevice::~RenderDevice() {
   GLint maxBuffers, maxTextures, maxFramebuffers, maxPrograms;
 
   // Delete buffers
@@ -101,22 +47,22 @@ OpenGLRenderDevice::~OpenGLRenderDevice() {
   }
 }
 
-GpuHandle OpenGLRenderDevice::CreatePipeline() {
+GpuHandle RenderDevice::CreatePipeline() {
   GLuint vao;
   glGenVertexArrays(1, &vao);
   glBindVertexArray(vao);
   return vao;
 }
 
-GpuHandle OpenGLRenderDevice::CreateBuffer() {
+GpuHandle RenderDevice::CreateBuffer() {
   GLuint bufferId;
   glGenBuffers(1, &bufferId);
   return bufferId;
 }
 
-GpuHandle OpenGLRenderDevice::CreateShader(const std::string& vertexSource,
-                                           const std::string& fragmentSource,
-                                           const std::string& geometrySource) {
+GpuHandle RenderDevice::CreateShader(const std::string& vertexSource,
+                                     const std::string& fragmentSource,
+                                     const std::string& geometrySource) {
   GLuint program = CreateShaderProgram(vertexSource, fragmentSource, geometrySource);
   if (program == 0) {
     std::cerr << "Failed to create shader program" << std::endl;
@@ -126,8 +72,8 @@ GpuHandle OpenGLRenderDevice::CreateShader(const std::string& vertexSource,
   return program;
 }
 
-GpuHandle OpenGLRenderDevice::CreateTexture2D(const float width, const float height,
-                                              bool generateMipmaps) {
+GpuHandle RenderDevice::CreateTexture2D(const float width, const float height,
+                                        bool generateMipmaps) {
   GLuint textureId;
   glGenTextures(1, &textureId);
 
@@ -146,8 +92,8 @@ GpuHandle OpenGLRenderDevice::CreateTexture2D(const float width, const float hei
   return textureId;
 }
 
-GpuHandle OpenGLRenderDevice::CreateFrameBuffer(GpuHandle colorHandle, GpuHandle depthHandle,
-                                                GpuHandle stencilHandle) {
+GpuHandle RenderDevice::CreateFrameBuffer(GpuHandle colorHandle, GpuHandle depthHandle,
+                                          GpuHandle stencilHandle) {
   GLuint fboId;
   glGenFramebuffers(1, &fboId);
   glBindFramebuffer(GL_FRAMEBUFFER, fboId);
@@ -181,19 +127,18 @@ GpuHandle OpenGLRenderDevice::CreateFrameBuffer(GpuHandle colorHandle, GpuHandle
   return fboId;
 }
 
-void OpenGLRenderDevice::DestroyBuffer(GpuHandle handle) { glDeleteBuffers(1, &handle); }
+void RenderDevice::DestroyBuffer(GpuHandle handle) { glDeleteBuffers(1, &handle); }
 
-void OpenGLRenderDevice::DestroyShader(GpuHandle handle) { glDeleteProgram(handle); }
+void RenderDevice::DestroyShader(GpuHandle handle) { glDeleteProgram(handle); }
 
-void OpenGLRenderDevice::UpdateVertexBuffer(GpuHandle handle, const size_t bytes,
-                                            const void* data) {
+void RenderDevice::UpdateVertexBuffer(GpuHandle handle, const size_t bytes, const void* data) {
   glBindBuffer(GL_ARRAY_BUFFER, handle);
   glBufferData(GL_ARRAY_BUFFER, bytes, data, GL_STATIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void OpenGLRenderDevice::UpdateUniformBuffer(GpuHandle handle, const size_t bytes, const void* data,
-                                             const uint32_t position) {
+void RenderDevice::UpdateUniformBuffer(GpuHandle handle, const size_t bytes, const void* data,
+                                       const uint32_t position) {
   glBindBuffer(GL_UNIFORM_BUFFER, handle);
   glBufferData(GL_UNIFORM_BUFFER, bytes, data, GL_DYNAMIC_DRAW);
 
@@ -207,21 +152,19 @@ void OpenGLRenderDevice::UpdateUniformBuffer(GpuHandle handle, const size_t byte
   }
 }
 
-void OpenGLRenderDevice::UpdateIndexBuffer(GpuHandle handle, std::span<const uint32_t> indices) {
+void RenderDevice::UpdateIndexBuffer(GpuHandle handle, std::span<const uint32_t> indices) {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), indices.data(),
                GL_STATIC_DRAW);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void OpenGLRenderDevice::BindPipeline(GpuHandle handle) { glBindVertexArray(handle); }
+void RenderDevice::BindPipeline(GpuHandle handle) { glBindVertexArray(handle); }
 
-void OpenGLRenderDevice::BindVertexBuffer(GpuHandle handle) {
-  glBindBuffer(GL_ARRAY_BUFFER, handle);
-}
+void RenderDevice::BindVertexBuffer(GpuHandle handle) { glBindBuffer(GL_ARRAY_BUFFER, handle); }
 
-void OpenGLRenderDevice::SetVertexAttributes(GpuHandle handle,
-                                             const std::span<VertexAttribute>& attributes) {
+void RenderDevice::SetVertexAttributes(GpuHandle handle,
+                                       const std::span<VertexAttribute>& attributes) {
   BindVertexBuffer(handle);
 
   unsigned int stride = 0;
@@ -245,25 +188,23 @@ void OpenGLRenderDevice::SetVertexAttributes(GpuHandle handle,
   }
 }
 
-void OpenGLRenderDevice::BindIndexBuffer(GpuHandle handle) {
+void RenderDevice::BindIndexBuffer(GpuHandle handle) {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
 }
 
-void OpenGLRenderDevice::BindShader(GpuHandle shaderHandle) {
+void RenderDevice::BindShader(GpuHandle shaderHandle) {
   glUseProgram(shaderHandle);
   currentShader_ = shaderHandle;
 }
 
-void OpenGLRenderDevice::BindTexture(GpuHandle handle, const uint32_t index) {
+void RenderDevice::BindTexture(GpuHandle handle, const uint32_t index) {
   glActiveTexture(GL_TEXTURE0 + index);
   glBindTexture(GL_TEXTURE_2D, handle);
 }
 
-void OpenGLRenderDevice::BindFrameBuffer(GpuHandle handle) {
-  glBindFramebuffer(GL_FRAMEBUFFER, handle);
-}
+void RenderDevice::BindFrameBuffer(GpuHandle handle) { glBindFramebuffer(GL_FRAMEBUFFER, handle); }
 
-void OpenGLRenderDevice::SetUniform(const std::string& name, const Vec3& vec) {
+void RenderDevice::SetUniform(const std::string& name, const Vec3& vec) {
   GLint location = GetUniformLocation(name);
 
   if (location != -1) {
@@ -271,8 +212,7 @@ void OpenGLRenderDevice::SetUniform(const std::string& name, const Vec3& vec) {
   }
 }
 
-void OpenGLRenderDevice::SetUniform(const std::string& name, const float valueA,
-                                    const float valueB) {
+void RenderDevice::SetUniform(const std::string& name, const float valueA, const float valueB) {
   GLint location = GetUniformLocation(name);
 
   if (location != -1) {
@@ -280,7 +220,7 @@ void OpenGLRenderDevice::SetUniform(const std::string& name, const float valueA,
   }
 }
 
-void OpenGLRenderDevice::SetUniform(const std::string& name, const Mat4& matrix) {
+void RenderDevice::SetUniform(const std::string& name, const Mat4& matrix) {
   GLint location = GetUniformLocation(name);
 
   if (location != -1) {
@@ -288,7 +228,7 @@ void OpenGLRenderDevice::SetUniform(const std::string& name, const Mat4& matrix)
   }
 }
 
-void OpenGLRenderDevice::SetUniform(const std::string& name, int value) {
+void RenderDevice::SetUniform(const std::string& name, int value) {
   GLint location = GetUniformLocation(name);
 
   if (location != -1) {
@@ -296,7 +236,7 @@ void OpenGLRenderDevice::SetUniform(const std::string& name, int value) {
   }
 }
 
-void OpenGLRenderDevice::SetUniform(const std::string& name, float value) {
+void RenderDevice::SetUniform(const std::string& name, float value) {
   GLint location = GetUniformLocation(name);
 
   if (location != -1) {
@@ -304,7 +244,7 @@ void OpenGLRenderDevice::SetUniform(const std::string& name, float value) {
   }
 }
 
-void OpenGLRenderDevice::DrawIndexed(PrimitiveTopology topology, std::size_t indexCount) {
+void RenderDevice::DrawIndexed(PrimitiveTopology topology, std::size_t indexCount) {
   // Debug: Check current OpenGL state
   GLint vao = 0, ebo = 0;
   glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
@@ -328,7 +268,7 @@ void OpenGLRenderDevice::DrawIndexed(PrimitiveTopology topology, std::size_t ind
   }
 }
 
-void OpenGLRenderDevice::Draw(PrimitiveTopology topology, std::size_t vertexCount) {
+void RenderDevice::Draw(PrimitiveTopology topology, std::size_t vertexCount) {
   // Debug: Check current OpenGL state
   GLint vao = 0;
   glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
@@ -348,28 +288,26 @@ void OpenGLRenderDevice::Draw(PrimitiveTopology topology, std::size_t vertexCoun
   }
 }
 
-void OpenGLRenderDevice::SetViewport(int x, int y, int width, int height) {
+void RenderDevice::SetViewport(int x, int y, int width, int height) {
   glViewport(x, y, width, height);
 }
 
-void OpenGLRenderDevice::SetClearColor(float r, float g, float b, float a) {
-  glClearColor(r, g, b, a);
-}
+void RenderDevice::SetClearColor(float r, float g, float b, float a) { glClearColor(r, g, b, a); }
 
-void OpenGLRenderDevice::Clear() { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
+void RenderDevice::Clear() { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
 
-void OpenGLRenderDevice::BeginFrame() {
+void RenderDevice::BeginFrame() {
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);  // White background
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void OpenGLRenderDevice::EndFrame() { glfwSwapBuffers(window_); }
+void RenderDevice::EndFrame() { glfwSwapBuffers(window_); }
 
-bool OpenGLRenderDevice::ShouldClose() const { return glfwWindowShouldClose(window_); }
+bool RenderDevice::ShouldClose() const { return glfwWindowShouldClose(window_); }
 
-void OpenGLRenderDevice::PollEvents() { glfwPollEvents(); }
+void RenderDevice::PollEvents() { glfwPollEvents(); }
 
-GLuint OpenGLRenderDevice::CompileShader(GLenum type, const std::string& source) {
+GLuint RenderDevice::CompileShader(GLenum type, const std::string& source) {
   GLuint shader = glCreateShader(type);
   const char* sourcePtr = source.c_str();
   glShaderSource(shader, 1, &sourcePtr, nullptr);
@@ -395,9 +333,9 @@ GLuint OpenGLRenderDevice::CompileShader(GLenum type, const std::string& source)
   return shader;
 }
 
-GLuint OpenGLRenderDevice::CreateShaderProgram(const std::string& vertexSource,
-                                               const std::string& fragmentSource,
-                                               const std::string& geometrySource) {
+GLuint RenderDevice::CreateShaderProgram(const std::string& vertexSource,
+                                         const std::string& fragmentSource,
+                                         const std::string& geometrySource) {
   GLuint vertexShader = CompileShader(GL_VERTEX_SHADER, vertexSource);
   if (vertexShader == 0) return 0;
 
@@ -482,7 +420,7 @@ GLuint OpenGLRenderDevice::CreateShaderProgram(const std::string& vertexSource,
   return program;
 }
 
-GLenum OpenGLRenderDevice::TopologyToGLenum(PrimitiveTopology topology) const {
+GLenum RenderDevice::TopologyToGLenum(PrimitiveTopology topology) const {
   switch (topology) {
     case PrimitiveTopology::Lines:
       return GL_LINES;
@@ -493,7 +431,7 @@ GLenum OpenGLRenderDevice::TopologyToGLenum(PrimitiveTopology topology) const {
   }
 }
 
-std::string OpenGLRenderDevice::GetErrorString(GLenum error) const {
+std::string RenderDevice::GetErrorString(GLenum error) const {
   switch (error) {
     case GL_INVALID_ENUM:
       return "GL_INVALID_ENUM";
@@ -516,6 +454,6 @@ std::string OpenGLRenderDevice::GetErrorString(GLenum error) const {
   }
 }
 
-GLint OpenGLRenderDevice::GetUniformLocation(const std::string& name) {
+GLint RenderDevice::GetUniformLocation(const std::string& name) {
   return glGetUniformLocation(currentShader_, name.c_str());
 }

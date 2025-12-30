@@ -29,6 +29,16 @@ file(GLOB_RECURSE CAD_SOURCES
     "${CMAKE_SOURCE_DIR}/src/*.cpp"
 )
 
+# Exclude platform-specific RenderDevice files from GLOB
+list(FILTER CAD_SOURCES EXCLUDE REGEX ".*RenderDevice_(Native|Emscripten)\\.cpp$")
+
+# Add the correct platform-specific RenderDevice implementation
+if(EMSCRIPTEN)
+    list(APPEND CAD_SOURCES "${CMAKE_SOURCE_DIR}/src/Rendering/Devices/RenderDevice_Emscripten.cpp")
+else()
+    list(APPEND CAD_SOURCES "${CMAKE_SOURCE_DIR}/src/Rendering/Devices/RenderDevice_Native.cpp")
+endif()
+
 add_library(cad_lib ${CAD_SOURCES})
 target_include_directories(cad_lib PUBLIC src)
 target_link_libraries(cad_lib PUBLIC ${OPENGL_LIBRARIES})

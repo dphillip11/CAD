@@ -1,13 +1,9 @@
 #pragma once
 
 #include "Model/Model.h"
+#include "Rendering/Devices/RenderDevice.h"
 #include "Rendering/FrameContext.h"
 #include "Rendering/Renderer.h"
-
-#ifdef USE_OPENGL
-#include "Rendering/Devices/OpenGLRenderDevice.h"
-using RenderDeviceType = OpenGLRenderDevice;
-#endif
 
 class Application {
  public:
@@ -19,7 +15,7 @@ class Application {
 
  private:
   Model model;
-  RenderDeviceType device;
+  RenderDevice device;
   Renderer renderer;
   FrameContext ctx;
 };

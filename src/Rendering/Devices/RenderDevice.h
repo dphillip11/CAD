@@ -2,10 +2,24 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
+#include "Rendering/Devices/GpuHandle.h"
 #include "Rendering/PrimitiveTopology.h"
+
+#ifdef __EMSCRIPTEN__
+#include <GLES3/gl3.h>
+#include <emscripten.h>
+#define GLFW_INCLUDE_ES3
+#else
+#include <GL/glew.h>
+#endif
+
+#include <GLFW/glfw3.h>
 
 class VertexBuffer;
 class IndexBuffer;
@@ -13,65 +27,85 @@ class Mat4;
 struct VertexAttribute;
 class Vec3;
 
-#include "Rendering/Devices/GpuHandle.h"
-
 class RenderDevice {
  public:
-  virtual ~RenderDevice() = default;
+  RenderDevice(int width = 800, int height = 600);
+  ~RenderDevice();
 
   // ----- Resource creation -----
-  virtual GpuHandle CreatePipeline() = 0;
-  virtual GpuHandle CreateBuffer() = 0;
-  virtual GpuHandle CreateFrameBuffer(GpuHandle colorHandle, GpuHandle depthHandle,
-                                      GpuHandle stencilHandle) = 0;
-  virtual GpuHandle CreateTexture2D(const float width, const float height,
-                                    bool generateMipmaps) = 0;
-  virtual GpuHandle CreateShader(const std::string& vertexSource, const std::string& fragmentSource,
-                                 const std::string& geometrySource = "") = 0;
+  GpuHandle CreatePipeline();
+  GpuHandle CreateBuffer();
+  GpuHandle CreateFrameBuffer(GpuHandle colorHandle, GpuHandle depthHandle,
+                              GpuHandle stencilHandle);
+  GpuHandle CreateTexture2D(float width, float height, bool generateMipmaps);
+  GpuHandle CreateShader(const std::string& vertexSource, const std::string& fragmentSource,
+                         const std::string& geometrySource = "");
 
-  virtual void DestroyBuffer(GpuHandle handle) = 0;
-  virtual void DestroyShader(GpuHandle handle) = 0;
+  void DestroyBuffer(GpuHandle handle);
+  void DestroyShader(GpuHandle handle);
 
   // ----- Buffer updates -----
-  virtual void UpdateVertexBuffer(GpuHandle handle, const size_t bytes, const void* data) = 0;
-  virtual void UpdateUniformBuffer(GpuHandle handle, const size_t bytes, const void* data,
-                                   const uint32_t position) = 0;
-  virtual void UpdateIndexBuffer(GpuHandle handle, std::span<const uint32_t> indices) = 0;
+  void UpdateVertexBuffer(GpuHandle handle, size_t bytes, const void* data);
+  void UpdateUniformBuffer(GpuHandle handle, size_t bytes, const void* data, uint32_t position);
+  void UpdateIndexBuffer(GpuHandle handle, std::span<const uint32_t> indices);
 
   // ----- Binding -----
-  virtual void BindPipeline(GpuHandle handle) = 0;
-  virtual void BindVertexBuffer(GpuHandle handle) = 0;
-  virtual void SetVertexAttributes(GpuHandle handle,
-                                   const std::span<VertexAttribute>& attributes) = 0;
-
-  virtual void BindIndexBuffer(GpuHandle handle) = 0;
-  virtual void BindTexture(GpuHandle handle, const uint32_t index) = 0;
-  virtual void BindFrameBuffer(GpuHandle handle) = 0;
-  virtual void BindShader(GpuHandle shaderHandle) = 0;
+  void BindPipeline(GpuHandle handle);
+  void BindVertexBuffer(GpuHandle handle);
+  void SetVertexAttributes(GpuHandle handle, const std::span<VertexAttribute>& attributes);
+  void BindIndexBuffer(GpuHandle handle);
+  void BindTexture(GpuHandle handle, uint32_t index);
+  void BindFrameBuffer(GpuHandle handle);
+  void BindShader(GpuHandle shaderHandle);
 
   // ----- Uniforms -----
-  virtual void SetUniform(const std::string& name, const Vec3& vec) = 0;
-  virtual void SetUniform(const std::string& name, const float valueA, const float valueB) = 0;
-  virtual void SetUniform(const std::string& name, const Mat4& matrix) = 0;
-  virtual void SetUniform(const std::string& name, int value) = 0;
-  virtual void SetUniform(const std::string& name, float value) = 0;
+  void SetUniform(const std::string& name, const Vec3& vec);
+  void SetUniform(const std::string& name, float valueA, float valueB);
+  void SetUniform(const std::string& name, const Mat4& matrix);
+  void SetUniform(const std::string& name, int value);
+  void SetUniform(const std::string& name, float value);
 
   // ----- Draw -----
-  virtual void DrawIndexed(PrimitiveTopology topology, std::size_t indexCount) = 0;
-  virtual void Draw(PrimitiveTopology topology, std::size_t vertexCount) = 0;
+  void DrawIndexed(PrimitiveTopology topology, std::size_t indexCount);
+  void Draw(PrimitiveTopology topology, std::size_t vertexCount);
 
   // ----- Viewport -----
-  virtual void SetViewport(int x, int y, int width, int height) = 0;
+  void SetViewport(int x, int y, int width, int height);
 
   // ----- Clear -----
-  virtual void SetClearColor(float r, float g, float b, float a) = 0;
-  virtual void Clear() = 0;
+  void SetClearColor(float r, float g, float b, float a);
+  void Clear();
 
   // ----- Frame control -----
-  virtual void BeginFrame() = 0;
-  virtual void EndFrame() = 0;
+  void BeginFrame();
+  void EndFrame();
+
+  // ----- Window management -----
+  GLFWwindow* GetWindow() const { return window_; }
+  bool ShouldClose() const;
+  void PollEvents();
 
   // ----- Framebuffer dimensions -----
-  virtual int GetFramebufferWidth() const = 0;
-  virtual int GetFramebufferHeight() const = 0;
+  int GetFramebufferWidth() const { return fbWidth_; }
+  int GetFramebufferHeight() const { return fbHeight_; }
+
+ private:
+  // Platform-specific initialization
+  void InitializePlatform();
+
+  // Common state
+  GLFWwindow* window_ = nullptr;
+  int width_ = 800;
+  int height_ = 600;
+  int fbWidth_ = 800;
+  int fbHeight_ = 600;
+  GLuint currentShader_ = 0;
+
+  // Utility functions
+  GLuint CompileShader(GLenum type, const std::string& source);
+  GLuint CreateShaderProgram(const std::string& vertexSource, const std::string& fragmentSource,
+                             const std::string& geometrySource);
+  GLenum TopologyToGLenum(PrimitiveTopology topology) const;
+  std::string GetErrorString(GLenum error) const;
+  GLint GetUniformLocation(const std::string& name);
 };
