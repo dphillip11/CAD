@@ -1,15 +1,3 @@
-#version 330 core
-
-layout(std140) uniform GlobalUniforms
-{
-    vec4 pointColor;
-    vec4 lineColor;
-    vec4 faceColor;
-    vec2 viewPortSize;
-    float lineThickness;
-    float axisLength;
-};
-
 layout(points) in;
 layout(line_strip, max_vertices = 6) out;
 

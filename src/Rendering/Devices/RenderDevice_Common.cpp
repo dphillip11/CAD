@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "RenderDevice.h"
+#include "Rendering/Resources/UniformBuffer.h"
 #include "Rendering/Resources/VertexAttribute.h"
 #include "Utilities/Mat4.h"
 #include "Utilities/Vec3.h"
@@ -336,17 +337,30 @@ GLuint RenderDevice::CompileShader(GLenum type, const std::string& source) {
 GLuint RenderDevice::CreateShaderProgram(const std::string& vertexSource,
                                          const std::string& fragmentSource,
                                          const std::string& geometrySource) {
-  GLuint vertexShader = CompileShader(GL_VERTEX_SHADER, vertexSource);
+  // Get shader preamble (version directive + uniform block definition)
+  std::string preamble = ShaderCommon::GetShaderPreamble();
+
+  // Prepend preamble to each shader source
+  std::string fullVertexSource = preamble + vertexSource;
+  std::string fullFragmentSource = preamble + fragmentSource;
+
+  GLuint vertexShader = CompileShader(GL_VERTEX_SHADER, fullVertexSource);
   if (vertexShader == 0) return 0;
 
-  GLuint geometryShader;
+  GLuint geometryShader = 0;
   if (!geometrySource.empty()) {
-    geometryShader = CompileShader(GL_GEOMETRY_SHADER, geometrySource);
+    std::string fullGeometrySource = preamble + geometrySource;
+    geometryShader = CompileShader(GL_GEOMETRY_SHADER, fullGeometrySource);
+    if (geometryShader == 0) {
+      glDeleteShader(vertexShader);
+      return 0;
+    }
   }
 
-  GLuint fragmentShader = CompileShader(GL_FRAGMENT_SHADER, fragmentSource);
+  GLuint fragmentShader = CompileShader(GL_FRAGMENT_SHADER, fullFragmentSource);
   if (fragmentShader == 0) {
     glDeleteShader(vertexShader);
+    if (geometryShader != 0) glDeleteShader(geometryShader);
     return 0;
   }
 
@@ -416,6 +430,9 @@ GLuint RenderDevice::CreateShaderProgram(const std::string& vertexSource,
   // Clean up shaders (they're linked into the program now)
   glDeleteShader(vertexShader);
   glDeleteShader(fragmentShader);
+  if (geometryShader != 0) {
+    glDeleteShader(geometryShader);
+  }
 
   return program;
 }
