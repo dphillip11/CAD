@@ -2,7 +2,6 @@
 
 #include <cassert>
 
-#include "Core/Events.h"
 #include "Core/Primitives.h"
 #include "Geometry/Geometry.h"
 #include "Topology/Tools.h"
@@ -10,10 +9,12 @@
 #include "Utilities/Mapped.h"
 
 Model::Model()
-    : vertices_(Events::verticesDirty),
-      edges_(Events::edgeIndicesDirty),
-      faces_(Events::faceIndicesDirty),
-      volumes_(Events::volumeIndicesDirty) {}
+    : vertices_(verticesDirty_), edges_(edgesDirty_), faces_(facesDirty_), volumes_(volumesDirty_) {
+  verticesDirty_ = true;  // Initial load
+  edgesDirty_ = true;
+  facesDirty_ = true;
+  volumesDirty_ = true;
+}
 
 VertexId Model::CreateVertex(const Vec3& position) {
   Vertex v{};

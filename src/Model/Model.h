@@ -51,7 +51,33 @@ class Model {
 
   uint32_t VertexIdToIndex(VertexId id) const;
 
+  // ---- Dirty Flag Management ---------------------------------
+  bool IsVerticesDirty() const { return verticesDirty_; }
+  bool IsEdgesDirty() const { return edgesDirty_; }
+  bool IsFacesDirty() const { return facesDirty_; }
+  bool IsVolumesDirty() const { return volumesDirty_; }
+  bool IsFrameContextDirty() const { return frameContextDirty_; }
+
+  void ResetDirtyFlags() {
+    verticesDirty_ = false;
+    edgesDirty_ = false;
+    facesDirty_ = false;
+    volumesDirty_ = false;
+    frameContextDirty_ = false;
+  }
+
+  bool ShouldRender() const {
+    return verticesDirty_ || edgesDirty_ || facesDirty_ || volumesDirty_ || frameContextDirty_;
+  }
+
  private:
+  // Dirty flags
+  bool verticesDirty_ = false;
+  bool edgesDirty_ = false;
+  bool facesDirty_ = false;
+  bool volumesDirty_ = false;
+  bool frameContextDirty_ = false;
+
   DirtySparseSet<Vertex> vertices_;
   DirtySparseSet<Edge> edges_;
   DirtySparseSet<Face> faces_;

@@ -6,14 +6,8 @@ class FrameContext;
 class Model;
 struct ModelViews;
 
+// Placeholder for future event system integration
+// Dirty flags now live in Model class
 namespace Events {
-extern bool edgeIndicesDirty;
-extern bool faceIndicesDirty;
-extern bool volumeIndicesDirty;
-extern bool verticesDirty;
-extern bool frameContextDirty;
-
-bool ShouldRender();
-
-void ResetDirtyFlags();
+// Future: Event-driven callbacks for model changes, UI updates, etc.
 }  // namespace Events

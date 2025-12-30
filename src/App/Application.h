@@ -3,8 +3,6 @@
 #include <memory>
 
 #include "Model/Model.h"
-#include "ModelView/ModelViewBuilder.h"
-#include "ModelView/ModelViews.h"
 #include "Rendering/FrameContext.h"
 #include "Rendering/Renderer.h"
 
@@ -23,8 +21,6 @@ class Application {
 
  private:
   Model model;
-  ModelViewBuilder viewBuilder{model};
-  ModelViews views;
   RenderDeviceType device;
   Renderer renderer;
   FrameContext ctx;

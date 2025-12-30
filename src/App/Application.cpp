@@ -8,7 +8,7 @@
 #include "Utilities/Mat4.h"
 #include "Utilities/Vec3.h"
 
-Application::Application() : device(), renderer(device) {}
+Application::Application() : device(), renderer(device, model) {}
 
 Application::~Application() = default;
 
@@ -69,33 +69,10 @@ bool Application::Run() {
     return false;
   }
 
-  if (Events::verticesDirty) {
-    renderer.UpdateVertices(model);
-  }
+  renderer.ProcessPendingUpdates(ctx);
+  renderer.Render();
 
-  if (Events::edgeIndicesDirty) {
-    viewBuilder.BuildLineView(views.lines);
-    renderer.UpdateEdgeIndices(views);
-  }
-
-  if (Events::faceIndicesDirty) {
-    viewBuilder.BuildFaceView(views.faces);
-    renderer.UpdateFaceIndices(views);
-  }
-
-  if (Events::volumeIndicesDirty) {
-    viewBuilder.BuildVolumeView(views.faces);
-    renderer.UpdateVolumeIndices(views);
-  }
-
-  if (Events::frameContextDirty) {
-    renderer.UpdateFrameContext(ctx);
-  }
-
-  if (Events::ShouldRender()) {
-    renderer.Render(views, model);
-    Events::ResetDirtyFlags();
-  }
+  model.ResetDirtyFlags();
 
   return true;
 }
