@@ -2,122 +2,117 @@
 
 #include <optional>
 #include <span>
+#include <variant>
 #include <vector>
 
 #include "Core/Primitives.h"
-#include "ICommand.h"
 #include "Utilities/Vec3.h"
+
+class Model;
 
 // =================================================
 // Vertex Commands
 // =================================================
 
-class CreateVertexCommand final : public ICommand {
- public:
-  explicit CreateVertexCommand(const Vec3& position);
+struct CreateVertexCommand {
+  Vec3 position;
+  std::optional<VertexId> createdVertex;
 
-  void Execute(Model& model) override;
-  void Undo(Model& model) override;
-
- private:
-  Vec3 position_;
-  std::optional<VertexId> createdVertex_;
+  void Execute(Model& model);
+  void Undo(Model& model);
 };
 
-class RemoveVertexCommand final : public ICommand {
- public:
-  explicit RemoveVertexCommand(VertexId id);
+struct RemoveVertexCommand {
+  VertexId id;
+  std::optional<Vertex> removedVertex;
 
-  void Execute(Model& model) override;
-  void Undo(Model& model) override;
-
- private:
-  VertexId id_;
-
-  // For undo (captured on execute)
-  std::optional<Vertex> removedVertex_;
+  void Execute(Model& model);
+  void Undo(Model& model);
 };
 
 // =================================================
 // Edge Commands
 // =================================================
 
-class CreateEdgeCommand final : public ICommand {
- public:
-  CreateEdgeCommand(VertexId a, VertexId b);
+struct CreateEdgeCommand {
+  VertexId a, b;
+  std::optional<EdgeId> createdEdge;
 
-  void Execute(Model& model) override;
-  void Undo(Model& model) override;
-
- private:
-  VertexId a_, b_;
-  std::optional<EdgeId> createdEdge_;
+  void Execute(Model& model);
+  void Undo(Model& model);
 };
 
-class RemoveEdgeCommand final : public ICommand {
- public:
-  explicit RemoveEdgeCommand(EdgeId id);
+struct RemoveEdgeCommand {
+  EdgeId id;
+  std::optional<Edge> removedEdge;
 
-  void Execute(Model& model) override;
-  void Undo(Model& model) override;
-
- private:
-  EdgeId id_;
-  std::optional<Edge> removedEdge_;
+  void Execute(Model& model);
+  void Undo(Model& model);
 };
 
 // =================================================
 // Face Commands
 // =================================================
 
-class CreateFaceCommand final : public ICommand {
- public:
-  explicit CreateFaceCommand(std::vector<EdgeId> edges);
+struct CreateFaceCommand {
+  std::vector<EdgeId> edges;
+  std::optional<FaceId> createdFace;
 
-  void Execute(Model& model) override;
-  void Undo(Model& model) override;
-
- private:
-  std::vector<EdgeId> edges_;
-  std::optional<FaceId> createdFace_;
+  void Execute(Model& model);
+  void Undo(Model& model);
 };
 
-class RemoveFaceCommand final : public ICommand {
- public:
-  explicit RemoveFaceCommand(FaceId id);
+struct RemoveFaceCommand {
+  FaceId id;
+  std::optional<Face> removedFace;
 
-  void Execute(Model& model) override;
-  void Undo(Model& model) override;
-
- private:
-  FaceId id_;
-  std::optional<Face> removedFace_;
+  void Execute(Model& model);
+  void Undo(Model& model);
 };
 
 // =================================================
 // Volume Commands
 // =================================================
 
-class CreateVolumeCommand final : public ICommand {
- public:
-  explicit CreateVolumeCommand(std::vector<FaceId> faces);
+struct CreateVolumeCommand {
+  std::vector<FaceId> faces;
+  std::optional<VolumeId> createdVolume;
 
-  void Execute(Model& model) override;
-  void Undo(Model& model) override;
-
- private:
-  std::vector<FaceId> faces_;
-  std::optional<VolumeId> createdVolume_;
+  void Execute(Model& model);
+  void Undo(Model& model);
 };
 
-class RemoveVolumeCommand final : public ICommand {
- public:
-  explicit RemoveVolumeCommand(VolumeId id);
+struct RemoveVolumeCommand {
+  VolumeId id;
+  std::optional<Volume> removedVolume;
 
-  void Execute(Model& model) override;
-  void Undo(Model& model) override;
+  void Execute(Model& model);
+  void Undo(Model& model);
+};
 
- private:
-  VolumeId id_;
-  std::optional<Volume> removedVolume_;
+// =================================================
+// Command Variant
+// =================================================
+
+using Command =
+    std::variant<CreateVertexCommand, RemoveVertexCommand, CreateEdgeCommand, RemoveEdgeCommand,
+                 CreateFaceCommand, RemoveFaceCommand, CreateVolumeCommand, RemoveVolumeCommand>;
+
+// Helper visitors for Execute/Undo
+struct ExecuteVisitor {
+  Model& model;
+
+  template <typename T>
+  void operator()(T& cmd) {
+    cmd.Execute(model);
+  }
+};
+
+struct UndoVisitor {
+  Model& model;
+
+  template <typename T>
+  void operator()(T& cmd) {
+    cmd.Undo(model);
+  }
 };

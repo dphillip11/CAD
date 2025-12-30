@@ -1,10 +1,9 @@
 #pragma once
 
 #include <cstddef>
-#include <memory>
 #include <vector>
 
-#include "ICommand.h"
+#include "Commands.h"
 
 class Model;
 
@@ -32,20 +31,21 @@ class CommandStack {
  private:
   Model& model_;
 
-  std::vector<std::unique_ptr<ICommand>> undoStack_;
-  std::vector<std::unique_ptr<ICommand>> redoStack_;
-
-  void PushUndo(std::unique_ptr<ICommand> cmd);
+  std::vector<Command> undoStack_;
+  std::vector<Command> redoStack_;
 };
 
 template <typename CommandT, typename... Args>
 bool CommandStack::Do(Args&&... args) {
-  auto cmd = std::make_unique<CommandT>(std::forward<Args>(args)...);
+  // Construct command directly in the variant
+  Command cmd = CommandT{std::forward<Args>(args)...};
 
-  cmd->Execute(model_);
+  // Execute
+  std::visit(ExecuteVisitor{model_}, cmd);
 
-  redoStack_.clear();        // Invalidate redo history
-  PushUndo(std::move(cmd));  // Record command
+  // Record
+  redoStack_.clear();                    // Invalidate redo history
+  undoStack_.push_back(std::move(cmd));  // Record command
 
   return true;
 }

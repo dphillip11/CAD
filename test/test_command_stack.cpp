@@ -3,37 +3,75 @@
 #include <gtest/gtest.h>
 
 #include "App/Commands/CommandStack.h"
-#include "App/Commands/ICommand.h"
+#include "App/Commands/Commands.h"
 #include "Model/Model.h"
 
-class IncrementCommand final : public ICommand {
- public:
-  IncrementCommand(int& count) : count_(count) {};
+// Test command structs (not in Commands.h)
+struct IncrementCommand {
+  int& count;
 
-  void Execute(Model& model) override { count_++; }
-
-  void Undo(Model& model) override { count_--; }
-
- private:
-  int& count_;
+  void Execute(Model& model) { count++; }
+  void Undo(Model& model) { count--; }
 };
 
-class DecrementCommand final : public ICommand {
+struct DecrementCommand {
+  int& count;
+
+  void Execute(Model& model) { count--; }
+  void Undo(Model& model) { count++; }
+};
+
+// Extend Command variant for test commands
+using TestCommand =
+    std::variant<IncrementCommand, DecrementCommand, CreateVertexCommand, RemoveVertexCommand,
+                 CreateEdgeCommand, RemoveEdgeCommand, CreateFaceCommand, RemoveFaceCommand,
+                 CreateVolumeCommand, RemoveVolumeCommand>;
+
+// Test-specific CommandStack that accepts test commands
+class TestCommandStack {
  public:
-  DecrementCommand(int& count) : count_(count) {};
+  explicit TestCommandStack(Model& model) : model_(model) {}
 
-  void Execute(Model& model) override { count_--; }
+  template <typename CommandT, typename... Args>
+  bool Do(Args&&... args) {
+    TestCommand cmd = CommandT{std::forward<Args>(args)...};
+    std::visit(ExecuteVisitor{model_}, cmd);
+    redoStack_.clear();
+    undoStack_.push_back(std::move(cmd));
+    return true;
+  }
 
-  void Undo(Model& model) override { count_++; }
+  bool CanUndo() const noexcept { return !undoStack_.empty(); }
+  bool CanRedo() const noexcept { return !redoStack_.empty(); }
+
+  bool Undo() {
+    if (undoStack_.empty()) return false;
+    TestCommand cmd = std::move(undoStack_.back());
+    undoStack_.pop_back();
+    std::visit(UndoVisitor{model_}, cmd);
+    redoStack_.push_back(std::move(cmd));
+    return true;
+  }
+
+  bool Redo() {
+    if (redoStack_.empty()) return false;
+    TestCommand cmd = std::move(redoStack_.back());
+    redoStack_.pop_back();
+    std::visit(ExecuteVisitor{model_}, cmd);
+    undoStack_.push_back(std::move(cmd));
+    return true;
+  }
 
  private:
-  int& count_;
+  Model& model_;
+  std::vector<TestCommand> undoStack_;
+  std::vector<TestCommand> redoStack_;
 };
 
 class CommandStackTest : public ::testing::Test {
  protected:
   Model model;
-  CommandStack stack{model};
+  TestCommandStack stack{model};
   int count = 0;
 };
 

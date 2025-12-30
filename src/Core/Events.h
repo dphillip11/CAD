@@ -2,10 +2,6 @@
 
 #include "Utilities/Event.h"
 
-class FrameContext;
-class Model;
-struct ModelViews;
-
 // Placeholder for future event system integration
 // Dirty flags now live in Model class
 namespace Events {

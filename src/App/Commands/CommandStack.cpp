@@ -1,6 +1,6 @@
 #include "CommandStack.h"
 
-#include "ICommand.h"
+#include "Commands.h"
 #include "Model/Model.h"
 
 // -------------------------------------------------
@@ -28,10 +28,10 @@ std::size_t CommandStack::RedoCount() const noexcept { return redoStack_.size();
 bool CommandStack::Undo() {
   if (undoStack_.empty()) return false;
 
-  auto cmd = std::move(undoStack_.back());
+  Command cmd = std::move(undoStack_.back());
   undoStack_.pop_back();
 
-  cmd->Undo(model_);
+  std::visit(UndoVisitor{model_}, cmd);
   redoStack_.push_back(std::move(cmd));
   return true;
 }
@@ -39,10 +39,10 @@ bool CommandStack::Undo() {
 bool CommandStack::Redo() {
   if (redoStack_.empty()) return false;
 
-  auto cmd = std::move(redoStack_.back());
+  Command cmd = std::move(redoStack_.back());
   redoStack_.pop_back();
 
-  cmd->Execute(model_);
+  std::visit(ExecuteVisitor{model_}, cmd);
   undoStack_.push_back(std::move(cmd));
   return true;
 }
@@ -55,5 +55,3 @@ void CommandStack::Clear() {
   undoStack_.clear();
   redoStack_.clear();
 }
-
-void CommandStack::PushUndo(std::unique_ptr<ICommand> cmd) { undoStack_.push_back(std::move(cmd)); }

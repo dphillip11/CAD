@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include "ModelView/ModelViewBuilder.h"
 #include "ModelView/ModelViews.h"
 #include "Rendering/Passes/RenderPass.h"

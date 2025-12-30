@@ -1,39 +1,56 @@
-#include <cassert>
-#include <iostream>
+#include <gtest/gtest.h>
 
 #include "Utilities/SparseSet.h"
 
-int main() {
+TEST(DirtySparseSetTest, InitiallyNotDirty) {
+  bool dirty = false;
+  DirtySparseSet<int> set(dirty);
+  EXPECT_FALSE(dirty);
+}
+
+TEST(DirtySparseSetTest, EmplaceSetsFlag) {
   bool dirty = false;
   DirtySparseSet<int> set(dirty);
 
-  // Initially not dirty
-  assert(!dirty);
+  Id id = set.Emplace(42);
+  EXPECT_TRUE(dirty);
+  EXPECT_EQ(set.Get(id), 42);
+}
 
-  // Emplace should set dirty
-  Id id1 = set.Emplace(42);
-  assert(dirty);
+TEST(DirtySparseSetTest, InsertSetsFlag) {
+  bool dirty = false;
+  DirtySparseSet<int> set(dirty);
+
+  Id id = set.Insert(24);
+  EXPECT_TRUE(dirty);
+  EXPECT_EQ(set.Get(id), 24);
+}
+
+TEST(DirtySparseSetTest, RemoveSetsFlag) {
+  bool dirty = false;
+  DirtySparseSet<int> set(dirty);
+
+  Id id = set.Emplace(42);
   dirty = false;  // reset
 
-  // Insert should set dirty
-  Id id2 = set.Insert(24);
-  assert(dirty);
-  dirty = false;
+  set.Remove(id);
+  EXPECT_TRUE(dirty);
+}
 
-  // Remove should set dirty
-  set.Remove(id1);
-  assert(dirty);
-  dirty = false;
+TEST(DirtySparseSetTest, NonMutatingOperationsDoNotSetFlag) {
+  bool dirty = false;
+  DirtySparseSet<int> set(dirty);
 
-  // Non-mutating operations should not set dirty
-  int val = set.Get(id2);
-  assert(val == 24);
-  assert(!dirty);
+  Id id = set.Insert(24);
+  dirty = false;  // reset
 
-  bool contains = set.Contains(id2);
-  assert(contains);
-  assert(!dirty);
+  // Get should not set dirty
+  int val = set.Get(id);
+  EXPECT_EQ(val, 24);
+  EXPECT_FALSE(dirty);
 
-  std::cout << "All tests passed!" << std::endl;
-  return 0;
+  // Contains should not set dirty
+  bool contains = set.Contains(id);
+  EXPECT_TRUE(contains);
+  EXPECT_FALSE(dirty);
 }

@@ -1,0 +1,124 @@
+{
+  "tests": 20,
+  "name": "AllTests",
+  "testsuites": [
+    {
+      "name": "CommandStackTest",
+      "tests": 5,
+      "testsuite": [
+        {
+          "name": "ExecuteCommand",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_command_stack.cpp",
+          "line": 78
+        },
+        {
+          "name": "UndoCommand",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_command_stack.cpp",
+          "line": 88
+        },
+        {
+          "name": "RedoCommand",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_command_stack.cpp",
+          "line": 100
+        },
+        {
+          "name": "RedoInvalidatedAfterNewCommand",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_command_stack.cpp",
+          "line": 111
+        },
+        {
+          "name": "MultipleUndoRedo",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_command_stack.cpp",
+          "line": 123
+        }
+      ]
+    },
+    {
+      "name": "DirtySparseSetTest",
+      "tests": 5,
+      "testsuite": [
+        {
+          "name": "InitiallyNotDirty",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_dirty_sparse_set.cpp",
+          "line": 5
+        },
+        {
+          "name": "EmplaceSetsFlag",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_dirty_sparse_set.cpp",
+          "line": 11
+        },
+        {
+          "name": "InsertSetsFlag",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_dirty_sparse_set.cpp",
+          "line": 20
+        },
+        {
+          "name": "RemoveSetsFlag",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_dirty_sparse_set.cpp",
+          "line": 29
+        },
+        {
+          "name": "NonMutatingOperationsDoNotSetFlag",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_dirty_sparse_set.cpp",
+          "line": 40
+        }
+      ]
+    },
+    {
+      "name": "ModelTest",
+      "tests": 10,
+      "testsuite": [
+        {
+          "name": "CreateVertex_InsertsVertex",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_model.cpp",
+          "line": 11
+        },
+        {
+          "name": "RemoveVertex_RemovesVertex",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_model.cpp",
+          "line": 19
+        },
+        {
+          "name": "CreateEdge_ValidVertices",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_model.cpp",
+          "line": 26
+        },
+        {
+          "name": "CreateEdge_FailsForSameVertex",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_model.cpp",
+          "line": 40
+        },
+        {
+          "name": "CreateEdge_FailsForDuplicateEdge",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_model.cpp",
+          "line": 47
+        },
+        {
+          "name": "CreateFace_Triangle",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_model.cpp",
+          "line": 55
+        },
+        {
+          "name": "CreateFace_FailsForNonPlane",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_model.cpp",
+          "line": 76
+        },
+        {
+          "name": "CreateFace_FailsForNonLoop",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_model.cpp",
+          "line": 93
+        },
+        {
+          "name": "CreateVolume_Tetrahedron",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_model.cpp",
+          "line": 107
+        },
+        {
+          "name": "IterationReturnsCorrectCounts",
+          "file": "\/Users\/daniel\/Repositories\/CAD\/test\/test_model.cpp",
+          "line": 142
+        }
+      ]
+    }
+  ]
+}

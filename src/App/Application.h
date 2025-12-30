@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include "Model/Model.h"
 #include "Rendering/FrameContext.h"
 #include "Rendering/Renderer.h"
