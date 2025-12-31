@@ -56,18 +56,16 @@ class Model {
   bool IsEdgesDirty() const { return edgesDirty_; }
   bool IsFacesDirty() const { return facesDirty_; }
   bool IsVolumesDirty() const { return volumesDirty_; }
-  bool IsFrameContextDirty() const { return frameContextDirty_; }
 
   void ResetDirtyFlags() {
     verticesDirty_ = false;
     edgesDirty_ = false;
     facesDirty_ = false;
     volumesDirty_ = false;
-    frameContextDirty_ = false;
   }
 
   bool ShouldRender() const {
-    return verticesDirty_ || edgesDirty_ || facesDirty_ || volumesDirty_ || frameContextDirty_;
+    return verticesDirty_ || edgesDirty_ || facesDirty_ || volumesDirty_;
   }
 
  private:
@@ -76,7 +74,6 @@ class Model {
   bool edgesDirty_ = false;
   bool facesDirty_ = false;
   bool volumesDirty_ = false;
-  bool frameContextDirty_ = false;
 
   DirtySparseSet<Vertex> vertices_;
   DirtySparseSet<Edge> edges_;

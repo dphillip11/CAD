@@ -7,6 +7,7 @@
 #include "Rendering/Devices/RenderDevice.h"
 #include "Rendering/FrameContext.h"
 #include "Rendering/Resources/RenderResources.h"
+#include "Rendering/Resources/UniformBuffer.h"
 #include "Utilities/Vec3.h"
 
 Renderer::Renderer(RenderDevice& device, const Model& model)
@@ -25,6 +26,17 @@ void Renderer::Initialise() {
 }
 
 void Renderer::ProcessPendingUpdates(const FrameContext& context) {
+  // Process input first
+  ProcessInput(context.input);
+
+  // Check for viewport resize
+  if (context.viewportWidth != 0 && context.viewportHeight != 0) {
+    if (context.viewportWidth != lastViewportWidth_ ||
+        context.viewportHeight != lastViewportHeight_) {
+      HandleViewportResize(context.viewportWidth, context.viewportHeight);
+    }
+  }
+
   if (model_.IsVerticesDirty()) {
     UpdateVertices();
   }
@@ -40,13 +52,14 @@ void Renderer::ProcessPendingUpdates(const FrameContext& context) {
     viewBuilder_.BuildVolumeView(views_.volumes);
     UpdateVolumeIndices();
   }
-  if (model_.IsFrameContextDirty()) {
+
+  if (shouldUpdateUniforms_) {
     UpdateFrameContext(context);
   }
 }
 
 void Renderer::Render() {
-  if (!model_.ShouldRender()) {
+  if (!model_.ShouldRender() && !shouldUpdateUniforms_) {
     return;
   }
 
@@ -58,6 +71,8 @@ void Renderer::Render() {
   screenPass_.Execute(device_, 6);
 
   device_.EndFrame();
+
+  shouldUpdateUniforms_ = false;
 }
 
 void Renderer::UpdateVertices() {
@@ -87,4 +102,50 @@ void Renderer::UpdateVolumeIndices() {
   }
 }
 
-void Renderer::UpdateFrameContext(const FrameContext& context) {}
+void Renderer::UpdateFrameContext(const FrameContext& context) {
+  // Update camera matrices and viewport size in uniform buffer
+  UniformBuffer uniforms;
+  uniforms.viewMatrix = camera_.GetViewMatrix();
+  uniforms.projectionMatrix = camera_.GetProjectionMatrix();
+
+  // Update viewport size for geometry shaders
+  uniforms.viewPortSize[0] = static_cast<float>(context.viewportWidth);
+  uniforms.viewPortSize[1] = static_cast<float>(context.viewportHeight);
+
+  device_.UpdateUniformBuffer(resources_.frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
+}
+
+void Renderer::ProcessInput(const FrameContext::InputState& input) {
+  // Orbit with left mouse button
+  if (input.mouseLeftDown && (input.mouseDeltaX != 0.0f || input.mouseDeltaY != 0.0f)) {
+    camera_.Orbit(input.mouseDeltaX, input.mouseDeltaY);
+    shouldUpdateUniforms_ = true;
+  }
+
+  // Pan with middle mouse button
+  if (input.mouseMiddleDown && (input.mouseDeltaX != 0.0f || input.mouseDeltaY != 0.0f)) {
+    camera_.Pan(input.mouseDeltaX, input.mouseDeltaY);
+    shouldUpdateUniforms_ = true;
+  }
+
+  // Zoom with scroll wheel
+  if (input.scrollDelta != 0.0f) {
+    camera_.Zoom(input.scrollDelta);
+    shouldUpdateUniforms_ = true;
+  }
+}
+
+void Renderer::HandleViewportResize(uint32_t width, uint32_t height) {
+  // Update screen pass viewport to match window size
+  screenPass_.viewportWidth = width;
+  screenPass_.viewportHeight = height;
+
+  // Update camera aspect ratio to match window
+  float aspect = static_cast<float>(width) / static_cast<float>(height);
+  camera_.SetAspectRatio(aspect);
+
+  // Track dimensions and flag uniforms for update
+  lastViewportWidth_ = width;
+  lastViewportHeight_ = height;
+  shouldUpdateUniforms_ = true;
+}

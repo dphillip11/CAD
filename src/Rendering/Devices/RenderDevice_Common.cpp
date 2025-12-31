@@ -132,6 +132,11 @@ void RenderDevice::DestroyBuffer(GpuHandle handle) { glDeleteBuffers(1, &handle)
 
 void RenderDevice::DestroyShader(GpuHandle handle) { glDeleteProgram(handle); }
 
+void RenderDevice::DestroyTexture(GpuHandle handle) {
+  GLuint textureId = handle;
+  glDeleteTextures(1, &textureId);
+}
+
 void RenderDevice::UpdateVertexBuffer(GpuHandle handle, const size_t bytes, const void* data) {
   glBindBuffer(GL_ARRAY_BUFFER, handle);
   glBufferData(GL_ARRAY_BUFFER, bytes, data, GL_STATIC_DRAW);
@@ -473,4 +478,66 @@ std::string RenderDevice::GetErrorString(GLenum error) const {
 
 GLint RenderDevice::GetUniformLocation(const std::string& name) {
   return glGetUniformLocation(currentShader_, name.c_str());
+}
+
+// ----- Input handling -----
+
+void RenderDevice::MouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+  auto* device = static_cast<RenderDevice*>(glfwGetWindowUserPointer(window));
+  if (device) {
+    device->scrollAccumulator_ += static_cast<float>(yoffset);
+  }
+}
+
+void RenderDevice::FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
+  auto* device = static_cast<RenderDevice*>(glfwGetWindowUserPointer(window));
+  if (device) {
+    device->fbWidth_ = width;
+    device->fbHeight_ = height;
+    device->framebufferResized_ = true;
+    glViewport(0, 0, width, height);
+  }
+}
+
+void RenderDevice::CaptureInput(FrameContext& context) {
+  // Update viewport dimensions if framebuffer was resized
+  if (framebufferResized_) {
+    context.viewportWidth = static_cast<uint32_t>(fbWidth_);
+    context.viewportHeight = static_cast<uint32_t>(fbHeight_);
+    framebufferResized_ = false;
+  }
+
+  // Get current mouse position
+  double mouseX, mouseY;
+  glfwGetCursorPos(window_, &mouseX, &mouseY);
+
+  // Calculate deltas from previous frame
+  context.input.mouseDeltaX = static_cast<float>(mouseX - lastMouseX_);
+  context.input.mouseDeltaY = static_cast<float>(mouseY - lastMouseY_);
+
+  // Update stored position for next frame
+  lastMouseX_ = mouseX;
+  lastMouseY_ = mouseY;
+
+  // Update current position
+  context.input.mouseX = static_cast<float>(mouseX);
+  context.input.mouseY = static_cast<float>(mouseY);
+
+  // Capture accumulated scroll delta and reset
+  context.input.scrollDelta = scrollAccumulator_;
+  scrollAccumulator_ = 0.0f;
+
+  // Button states
+  context.input.mouseLeftDown = glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+  context.input.mouseMiddleDown =
+      glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
+  context.input.mouseRightDown = glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+
+  // Keyboard modifiers
+  context.input.shiftDown = glfwGetKey(window_, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+                            glfwGetKey(window_, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+  context.input.ctrlDown = glfwGetKey(window_, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
+                           glfwGetKey(window_, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
+  context.input.altDown = glfwGetKey(window_, GLFW_KEY_LEFT_ALT) == GLFW_PRESS ||
+                          glfwGetKey(window_, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS;
 }

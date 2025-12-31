@@ -2,10 +2,6 @@
 
 #include <cassert>
 
-constexpr auto Vec3::operator+(const Vec3& other) const -> Vec3 {
-  return {x + other.x, y + other.y, z + other.z};
-}
-
 auto Vec3::operator+=(const Vec3& other) -> Vec3& {
   x += other.x;
   y += other.y;

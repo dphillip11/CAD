@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "Rendering/Devices/GpuHandle.h"
+#include "Rendering/FrameContext.h"
 #include "Rendering/PrimitiveTopology.h"
 
 #ifdef __EMSCRIPTEN__
@@ -43,6 +44,7 @@ class RenderDevice {
 
   void DestroyBuffer(GpuHandle handle);
   void DestroyShader(GpuHandle handle);
+  void DestroyTexture(GpuHandle handle);
 
   // ----- Buffer updates -----
   void UpdateVertexBuffer(GpuHandle handle, size_t bytes, const void* data);
@@ -85,6 +87,9 @@ class RenderDevice {
   bool ShouldClose() const;
   void PollEvents();
 
+  // ----- Input capture -----
+  void CaptureInput(FrameContext& context);
+
   // ----- Framebuffer dimensions -----
   int GetFramebufferWidth() const { return fbWidth_; }
   int GetFramebufferHeight() const { return fbHeight_; }
@@ -93,6 +98,10 @@ class RenderDevice {
   // Platform-specific initialization
   void InitializePlatform();
 
+  // Input handling
+  static void MouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+  static void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
+
   // Common state
   GLFWwindow* window_ = nullptr;
   int width_ = 800;
@@ -100,6 +109,12 @@ class RenderDevice {
   int fbWidth_ = 800;
   int fbHeight_ = 600;
   GLuint currentShader_ = 0;
+
+  // Input state
+  double lastMouseX_ = 0.0;
+  double lastMouseY_ = 0.0;
+  float scrollAccumulator_ = 0.0f;
+  bool framebufferResized_ = false;
 
   // Utility functions
   GLuint CompileShader(GLenum type, const std::string& source);

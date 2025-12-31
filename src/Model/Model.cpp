@@ -149,7 +149,6 @@ bool Model::CanCreateFace(std::span<const EdgeId> edges) const {
   // get vertices
   const auto vertices = vertices_.Get(vertexIds);
   const auto positions = Mapped(vertices, &Vertex::position);
-  ;
 
   if (!Geometry::AreCoplanar(positions)) return false;
 

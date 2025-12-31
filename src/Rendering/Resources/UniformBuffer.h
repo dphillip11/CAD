@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <string>
 
+#include "Utilities/Mat4.h"
+
 struct alignas(16) UniformBuffer {
   float pointColor[4] = {0.f, 1.f, 0.f, 1.f};
   float lineColor[4] = {0.8f, 0.f, 0.5f, 1.f};
@@ -10,6 +12,8 @@ struct alignas(16) UniformBuffer {
   float viewPortSize[2] = {800, 600};
   float lineThickness = 5.0;
   float axisLength = 0.15f;
+  Mat4 viewMatrix = Mat4::Identity();
+  Mat4 projectionMatrix = Mat4::Identity();
 };
 
 // GLSL uniform block definition generated from the struct above
@@ -28,6 +32,8 @@ layout(std140) uniform GlobalUniforms
     vec2 viewPortSize;
     float lineThickness;
     float axisLength;
+    mat4 viewMatrix;
+    mat4 projectionMatrix;
 };
 )";
 

@@ -62,6 +62,9 @@ bool Application::Start() {
 }
 
 bool Application::Run() {
+  // Capture input into FrameContext
+  device.CaptureInput(ctx);
+
   device.PollEvents();
 
   if (device.ShouldClose()) {

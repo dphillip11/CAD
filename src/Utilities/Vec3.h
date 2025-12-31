@@ -7,7 +7,9 @@ struct Vec3 {
   constexpr Vec3(float a, float b, float c) : x(a), y(b), z(c) {}
   constexpr Vec3() : Vec3(0) {}
 
-  [[nodiscard]] constexpr auto operator+(const Vec3& other) const -> Vec3;
+  [[nodiscard]] constexpr auto operator+(const Vec3& other) const -> Vec3 {
+    return {x + other.x, y + other.y, z + other.z};
+  }
   auto operator+=(const Vec3& other) -> Vec3&;
 
   [[nodiscard]] auto operator-(const Vec3& other) const -> Vec3;

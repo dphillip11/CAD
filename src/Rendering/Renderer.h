@@ -2,10 +2,11 @@
 
 #include "ModelView/ModelViewBuilder.h"
 #include "ModelView/ModelViews.h"
+#include "Rendering/Camera.h"
+#include "Rendering/FrameContext.h"
 #include "Rendering/Passes/RenderPass.h"
 #include "Rendering/Resources/RenderResources.h"
 
-class FrameContext;
 class Model;
 
 class Renderer {
@@ -26,12 +27,19 @@ class Renderer {
   void UpdateFaceIndices();
   void UpdateVolumeIndices();
   void UpdateFrameContext(const FrameContext& context);
+  void ProcessInput(const FrameContext::InputState& input);
+  void HandleViewportResize(uint32_t width, uint32_t height);
 
   RenderDevice& device_;
   const Model& model_;
+  Camera camera_;
   ModelViewBuilder viewBuilder_;
   ModelViews views_;
   RenderResources resources_;
+
+  bool shouldUpdateUniforms_ = true;
+  uint32_t lastViewportWidth_ = 0;
+  uint32_t lastViewportHeight_ = 0;
 
   RenderPass pointPass_;
   RenderPass linePass_;

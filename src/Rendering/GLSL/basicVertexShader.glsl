@@ -4,5 +4,5 @@ uniform sampler2D tex1;
 uniform sampler2D tex2;
 
 void main() {
-    gl_Position = vec4(aPos, 1.0);
+    gl_Position = projectionMatrix * viewMatrix * vec4(aPos, 1.0);
 }
