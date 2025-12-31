@@ -107,8 +107,8 @@ class RenderDevice {
   GLFWwindow* window_ = nullptr;
   int width_ = 800;
   int height_ = 600;
-  int fbWidth_ = 800;
-  int fbHeight_ = 600;
+  int fbWidth_ = 1920;
+  int fbHeight_ = 1080;
   GLuint currentShader_ = 0;
 
   // Input state
