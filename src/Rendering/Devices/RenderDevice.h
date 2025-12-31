@@ -39,6 +39,7 @@ class RenderDevice {
   GpuHandle CreateFrameBuffer(GpuHandle colorHandle, GpuHandle depthHandle,
                               GpuHandle stencilHandle);
   GpuHandle CreateTexture2D(float width, float height, bool generateMipmaps);
+  GpuHandle CreateDepthTexture2D(float width, float height);
   GpuHandle CreateShader(const std::string& vertexSource, const std::string& fragmentSource,
                          const std::string& geometrySource = "");
 

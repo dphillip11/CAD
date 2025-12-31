@@ -30,10 +30,13 @@ class RenderResources {
   // render textures
   GpuHandle framebuffer0;
   GpuHandle texture0;
+  GpuHandle depthTexture0;
   GpuHandle framebuffer1;
   GpuHandle texture1;
+  GpuHandle depthTexture1;
   GpuHandle framebuffer2;
   GpuHandle texture2;
+  GpuHandle depthTexture2;
   // vao
   GpuHandle geometryPipeline;
   GpuHandle screenPipeline;

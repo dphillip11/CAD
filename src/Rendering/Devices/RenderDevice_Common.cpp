@@ -93,6 +93,23 @@ GpuHandle RenderDevice::CreateTexture2D(const float width, const float height,
   return textureId;
 }
 
+GpuHandle RenderDevice::CreateDepthTexture2D(const float width, const float height) {
+  GLuint textureId;
+  glGenTextures(1, &textureId);
+
+  glBindTexture(GL_TEXTURE_2D, textureId);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+  // Allocate depth texture storage
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT,
+               GL_UNSIGNED_INT, nullptr);
+
+  return textureId;
+}
+
 GpuHandle RenderDevice::CreateFrameBuffer(GpuHandle colorHandle, GpuHandle depthHandle,
                                           GpuHandle stencilHandle) {
   GLuint fboId;

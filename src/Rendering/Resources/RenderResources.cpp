@@ -57,19 +57,29 @@ void RenderResources::LoadResources(RenderDevice& device) {
   device.SetUniform("tex0", 0);
   device.SetUniform("tex1", 1);
   device.SetUniform("tex2", 2);
+  device.SetUniform("depth0", 3);
+  device.SetUniform("depth1", 4);
+  device.SetUniform("depth2", 5);
 
   // render textures - use actual framebuffer size
   texture0 = device.CreateTexture2D(fbWidth, fbHeight, false);
   texture1 = device.CreateTexture2D(fbWidth, fbHeight, false);
   texture2 = device.CreateTexture2D(fbWidth, fbHeight, false);
 
+  depthTexture0 = device.CreateDepthTexture2D(fbWidth, fbHeight);
+  depthTexture1 = device.CreateDepthTexture2D(fbWidth, fbHeight);
+  depthTexture2 = device.CreateDepthTexture2D(fbWidth, fbHeight);
+
   device.BindTexture(texture0, 0);
   device.BindTexture(texture1, 1);
   device.BindTexture(texture2, 2);
+  device.BindTexture(depthTexture0, 3);
+  device.BindTexture(depthTexture1, 4);
+  device.BindTexture(depthTexture2, 5);
 
-  framebuffer0 = device.CreateFrameBuffer(texture0, 0, 0);
-  framebuffer1 = device.CreateFrameBuffer(texture1, 0, 0);
-  framebuffer2 = device.CreateFrameBuffer(texture2, 0, 0);
+  framebuffer0 = device.CreateFrameBuffer(texture0, depthTexture0, 0);
+  framebuffer1 = device.CreateFrameBuffer(texture1, depthTexture1, 0);
+  framebuffer2 = device.CreateFrameBuffer(texture2, depthTexture2, 0);
 
   screenPipeline = device.CreatePipeline();
 
