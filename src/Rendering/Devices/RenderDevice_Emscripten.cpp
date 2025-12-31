@@ -48,6 +48,9 @@ void RenderDevice::InitializePlatform() {
   glfwSetScrollCallback(window_, MouseScrollCallback);
   glfwSetFramebufferSizeCallback(window_, FramebufferSizeCallback);
 
+  // Trigger initial viewport setup by marking framebuffer as resized
+  framebufferResized_ = true;
+
   std::cout << "WebGL initialized successfully" << std::endl;
   std::cout << "WebGL version: " << glGetString(GL_VERSION) << std::endl;
   std::cout << "GLSL ES version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
