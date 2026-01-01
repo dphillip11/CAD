@@ -19,8 +19,8 @@ BUILD_DIR=web-build
 echo "Configuring Emscripten build (build dir: $BUILD_DIR)"
 mkdir -p "$BUILD_DIR"
 
-# Use direct cmake with Emscripten toolchain
-cmake -S . -B "$BUILD_DIR" -DCMAKE_TOOLCHAIN_FILE=/opt/homebrew/Cellar/emscripten/4.0.7/libexec/cmake/Modules/Platform/Emscripten.cmake -DBUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release
+# Use emcmake to automatically set the correct Emscripten toolchain file
+emcmake cmake -S . -B "$BUILD_DIR" -DBUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release
 
 echo "Building with Emscripten"
 cmake --build "$BUILD_DIR" --config Release -- -j "$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)"
