@@ -36,15 +36,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache CMake dependencies
+      - name: Cache GoogleTest build
         uses: actions/cache@v4
         with:
           path: |
-            build/_deps
-            build/CMakeFiles
-          key: ${{ runner.os }}-cad-${{ hashFiles('**/CMakeLists.txt') }}
+            build/_deps/googletest-build
+          key: ${{ runner.os }}-cad-gtest-${{ hashFiles('test/CMakeLists.txt') }}
           restore-keys: |
-            ${{ runner.os }}-cad-
+            ${{ runner.os }}-cad-gtest-
 
       - name: Check CMake
         run: cmake --version || true
@@ -99,13 +98,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache FetchContent deps
-        uses: actions/cache@v4
-        with:
-          path: build/_deps
-          key: ${{ runner.os }}-cad-deps-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-cad-deps-
+      # Note: Emscripten build has tests disabled, so no GoogleTest caching needed
 
       - name: Cache Emscripten SDK
         uses: actions/cache@v4

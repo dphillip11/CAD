@@ -4,6 +4,8 @@ FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
   GIT_TAG v1.14.0
+  # Avoid git update errors in CI with cached builds
+  UPDATE_DISCONNECTED TRUE
 )
 
 # Set GoogleTest build options
