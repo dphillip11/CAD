@@ -33,22 +33,37 @@ void RenderResources::LoadResources(RenderDevice& device) {
 
   // shaders
   const std::string vertexSource = IO::LoadSource("basicVertexShader.glsl");
-  const std::string geometrySource = IO::LoadSource("lineThicknessGeometryShader.glsl");
   const std::string fragmentSource = IO::LoadSource("basicFragmentShader.glsl");
   const std::string lineFragmentSource = IO::LoadSource("lineFragmentShader.glsl");
   const std::string textureVertexSource = IO::LoadSource("textureToScreenVertexShader.glsl");
   const std::string renderTexFragmentSource = IO::LoadSource("textureToScreenFragmentShader.glsl");
   const std::string pointVertexSource = IO::LoadSource("pointVertex.glsl");
-  const std::string pointGeometrySource = IO::LoadSource("pointGeometry.glsl");
   const std::string pointFragmentSource = IO::LoadSource("pointFragment.glsl");
 
+#ifndef __EMSCRIPTEN__
+  // Geometry shaders are not supported in WebGL/OpenGL ES
+  const std::string geometrySource = IO::LoadSource("lineThicknessGeometryShader.glsl");
+  const std::string pointGeometrySource = IO::LoadSource("pointGeometry.glsl");
   pointShader = device.CreateShader(pointVertexSource, pointFragmentSource, pointGeometrySource);
+#else
+  // For Emscripten, use simple point rendering
+  const std::string pointVertexInstancedSource = IO::LoadSource("pointVertexInstanced.glsl");
+  const std::string pointFragmentInstancedSource = IO::LoadSource("pointFragmentInstanced.glsl");
+  pointShader = device.CreateShader(pointVertexInstancedSource, pointFragmentInstancedSource);
+#endif
+
   device.BindShader(pointShader);
   device.UpdateUniformBuffer(frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
   basicShader = device.CreateShader(vertexSource, fragmentSource);
   device.BindShader(basicShader);
   device.UpdateUniformBuffer(frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
+
+#ifndef __EMSCRIPTEN__
   lineShader = device.CreateShader(vertexSource, lineFragmentSource, geometrySource);
+#else
+  lineShader = device.CreateShader(vertexSource, lineFragmentSource);
+#endif
+
   device.BindShader(lineShader);
   device.UpdateUniformBuffer(frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
   screenShader = device.CreateShader(textureVertexSource, renderTexFragmentSource);

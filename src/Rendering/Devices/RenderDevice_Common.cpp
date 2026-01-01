@@ -9,44 +9,7 @@
 #include "Utilities/Mat4.h"
 #include "Utilities/Vec3.h"
 
-// Constructor and InitializePlatform are in platform-specific files
-
-RenderDevice::~RenderDevice() {
-  GLint maxBuffers, maxTextures, maxFramebuffers, maxPrograms;
-
-  // Delete buffers
-  glGetIntegerv(GL_MAX_DRAW_BUFFERS, &maxBuffers);
-  for (GLint i = 1; i <= maxBuffers; ++i) {
-    GLuint bufferId = i;
-    glDeleteBuffers(1, &bufferId);
-  }
-
-  // Delete textures
-  glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextures);
-  for (GLint i = 1; i <= maxTextures; ++i) {
-    GLuint textureId = i;
-    glDeleteTextures(1, &textureId);
-  }
-
-  // Delete framebuffers
-  glGetIntegerv(GL_MAX_FRAMEBUFFER_WIDTH, &maxFramebuffers);
-  for (GLint i = 1; i <= maxFramebuffers; ++i) {
-    GLuint framebufferId = i;
-    glDeleteFramebuffers(1, &framebufferId);
-  }
-
-  // Delete programs
-  glGetIntegerv(GL_MAX_PROGRAM_TEXEL_OFFSET, &maxPrograms);
-  for (GLint i = 1; i <= maxPrograms; ++i) {
-    GLuint programId = i;
-    glDeleteProgram(programId);
-  }
-
-  if (window_) {
-    glfwDestroyWindow(window_);
-    glfwTerminate();
-  }
-}
+// Constructor, destructor, and InitializePlatform are in platform-specific files
 
 GpuHandle RenderDevice::CreatePipeline() {
   GLuint vao;
@@ -282,6 +245,14 @@ void RenderDevice::DrawIndexed(PrimitiveTopology topology, std::size_t indexCoun
 
   GLenum mode = TopologyToGLenum(topology);
 
+#ifdef __EMSCRIPTEN__
+  // WebGL doesn't support geometry shaders, so use glLineWidth for line thickness
+  // Note: Most WebGL implementations only support line width of 1
+  if (topology == PrimitiveTopology::Lines) {
+    glLineWidth(2.0f);  // WebGL typically only supports lineWidth = 1
+  }
+#endif
+
   glDrawElements(mode, static_cast<GLsizei>(indexCount), GL_UNSIGNED_INT, nullptr);
 
   GLenum error = glGetError();
@@ -324,12 +295,6 @@ void RenderDevice::BeginFrame() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void RenderDevice::EndFrame() { glfwSwapBuffers(window_); }
-
-bool RenderDevice::ShouldClose() const { return glfwWindowShouldClose(window_); }
-
-void RenderDevice::PollEvents() { glfwPollEvents(); }
-
 GLuint RenderDevice::CompileShader(GLenum type, const std::string& source) {
   GLuint shader = glCreateShader(type);
   const char* sourcePtr = source.c_str();
@@ -370,6 +335,8 @@ GLuint RenderDevice::CreateShaderProgram(const std::string& vertexSource,
   if (vertexShader == 0) return 0;
 
   GLuint geometryShader = 0;
+#ifndef __EMSCRIPTEN__
+  // Geometry shaders are not supported in WebGL/OpenGL ES
   if (!geometrySource.empty()) {
     std::string fullGeometrySource = preamble + geometrySource;
     geometryShader = CompileShader(GL_GEOMETRY_SHADER, fullGeometrySource);
@@ -378,6 +345,7 @@ GLuint RenderDevice::CreateShaderProgram(const std::string& vertexSource,
       return 0;
     }
   }
+#endif
 
   GLuint fragmentShader = CompileShader(GL_FRAGMENT_SHADER, fullFragmentSource);
   if (fragmentShader == 0) {
@@ -495,66 +463,4 @@ std::string RenderDevice::GetErrorString(GLenum error) const {
 
 GLint RenderDevice::GetUniformLocation(const std::string& name) {
   return glGetUniformLocation(currentShader_, name.c_str());
-}
-
-// ----- Input handling -----
-
-void RenderDevice::MouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
-  auto* device = static_cast<RenderDevice*>(glfwGetWindowUserPointer(window));
-  if (device) {
-    device->scrollAccumulator_ += static_cast<float>(yoffset);
-  }
-}
-
-void RenderDevice::FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
-  auto* device = static_cast<RenderDevice*>(glfwGetWindowUserPointer(window));
-  if (device) {
-    device->fbWidth_ = width;
-    device->fbHeight_ = height;
-    device->framebufferResized_ = true;
-    glViewport(0, 0, width, height);
-  }
-}
-
-void RenderDevice::CaptureInput(FrameContext& context) {
-  // Update viewport dimensions if framebuffer was resized
-  if (framebufferResized_) {
-    context.viewportWidth = static_cast<uint32_t>(fbWidth_);
-    context.viewportHeight = static_cast<uint32_t>(fbHeight_);
-    framebufferResized_ = false;
-  }
-
-  // Get current mouse position
-  double mouseX, mouseY;
-  glfwGetCursorPos(window_, &mouseX, &mouseY);
-
-  // Calculate deltas from previous frame
-  context.input.mouseDeltaX = static_cast<float>(mouseX - lastMouseX_);
-  context.input.mouseDeltaY = static_cast<float>(mouseY - lastMouseY_);
-
-  // Update stored position for next frame
-  lastMouseX_ = mouseX;
-  lastMouseY_ = mouseY;
-
-  // Update current position
-  context.input.mouseX = static_cast<float>(mouseX);
-  context.input.mouseY = static_cast<float>(mouseY);
-
-  // Capture accumulated scroll delta and reset
-  context.input.scrollDelta = scrollAccumulator_;
-  scrollAccumulator_ = 0.0f;
-
-  // Button states
-  context.input.mouseLeftDown = glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
-  context.input.mouseMiddleDown =
-      glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
-  context.input.mouseRightDown = glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
-
-  // Keyboard modifiers
-  context.input.shiftDown = glfwGetKey(window_, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
-                            glfwGetKey(window_, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
-  context.input.ctrlDown = glfwGetKey(window_, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
-                           glfwGetKey(window_, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
-  context.input.altDown = glfwGetKey(window_, GLFW_KEY_LEFT_ALT) == GLFW_PRESS ||
-                          glfwGetKey(window_, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS;
 }

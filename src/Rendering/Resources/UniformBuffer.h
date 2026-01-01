@@ -23,6 +23,11 @@ namespace ShaderCommon {
 constexpr const char* GLSL_VERSION_DESKTOP = "#version 330 core\n";
 constexpr const char* GLSL_VERSION_ES = "#version 300 es\n";
 
+constexpr const char* GLSL_PRECISION_ES = R"(
+precision highp float;
+precision highp int;
+)";
+
 constexpr const char* GLSL_UNIFORMS = R"(
 layout(std140) uniform GlobalUniforms
 {
@@ -44,7 +49,13 @@ constexpr const char* GetGLSLVersion() { return GLSL_VERSION_ES; }
 constexpr const char* GetGLSLVersion() { return GLSL_VERSION_DESKTOP; }
 #endif
 
-// Complete shader preamble (version + uniforms)
-inline std::string GetShaderPreamble() { return std::string(GetGLSLVersion()) + GLSL_UNIFORMS; }
+// Complete shader preamble (version + precision + uniforms)
+inline std::string GetShaderPreamble() {
+#ifdef __EMSCRIPTEN__
+  return std::string(GetGLSLVersion()) + GLSL_PRECISION_ES + GLSL_UNIFORMS;
+#else
+  return std::string(GetGLSLVersion()) + GLSL_UNIFORMS;
+#endif
+}
 
 }  // namespace ShaderCommon

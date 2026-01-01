@@ -47,11 +47,5 @@ class RenderResources {
 
   // framebuffer dimensions
   int fbWidth = 0;
-  GpuHandle pointCrossPipeline;  // Pipeline for instanced point crosses
-
-  // Point cross template info
-  int pointCrossVertexCount = 0;
-  int pointCrossIndexCount = 0;
-
   int fbHeight = 0;
 };
