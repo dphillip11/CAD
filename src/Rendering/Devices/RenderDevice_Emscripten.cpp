@@ -43,6 +43,9 @@ void RenderDevice::InitializePlatform() {
   glEnable(GL_DEPTH_TEST);
   glFrontFace(GL_CW);  // Clockwise faces are front faces
 
+  glEnable(GL_LINE_SMOOTH);
+  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+
   // Enable alpha blending for transparency
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
