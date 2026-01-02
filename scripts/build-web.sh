@@ -41,8 +41,12 @@ else
   exit 1
 fi
 
-# Ensure there's an index.html at the site root so GitHub Pages can serve the app at /
-if [ -f web/hello.html ]; then
+# Ensure there's an index.html at the site root
+# If a custom index_new.html exists in web/, use it; otherwise create a simple redirect
+if [ -f web/index_new.html ]; then
+  cp web/index_new.html web/index.html
+  echo "Copied web/index_new.html to web/index.html (custom UI)"
+elif [ -f web/hello.html ]; then
   cat > web/index.html <<'HTML'
 <!doctype html>
 <html>

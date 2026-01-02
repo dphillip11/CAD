@@ -4,6 +4,7 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include <emscripten/bind.h>
 
 // Global application instance for Emscripten main loop
 Application* g_app = nullptr;
@@ -20,6 +21,12 @@ void emscripten_main_loop() {
     g_app = nullptr;
   }
 }
+
+// Test function to be called from JavaScript
+void testButtonClick() { std::cout << "Hello from C++! Button was clicked!" << std::endl; }
+
+// Expose the function to JavaScript using Embind
+EMSCRIPTEN_BINDINGS(my_module) { emscripten::function("testButtonClick", &testButtonClick); }
 #endif
 
 auto main() -> int {

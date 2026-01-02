@@ -62,7 +62,7 @@ endif()
 if(EMSCRIPTEN)
     set_target_properties(CAD PROPERTIES 
         SUFFIX ".html"
-        LINK_FLAGS "-s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s ALLOW_MEMORY_GROWTH=1 -s ASSERTIONS=1 -s NO_DISABLE_EXCEPTION_CATCHING --embed-file ${CMAKE_SOURCE_DIR}/src/Rendering/GLSL@src/Rendering/GLSL"
+        LINK_FLAGS "-s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s ALLOW_MEMORY_GROWTH=1 -s ASSERTIONS=1 -s NO_DISABLE_EXCEPTION_CATCHING --bind --embed-file ${CMAKE_SOURCE_DIR}/src/Rendering/GLSL@src/Rendering/GLSL"
     )
 endif()
 
