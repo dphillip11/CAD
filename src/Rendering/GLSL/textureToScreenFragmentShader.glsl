@@ -53,15 +53,6 @@ vec3 skyColor(float rayY) {
     }
 }
 
-// Get color for a specific quadrant (single texture layer for debug views)
-vec4 getQuadrantColor(int quadrant, vec2 position) {
-    if (quadrant == 0) return texture(tex0, position);      // points
-    if (quadrant == 1) return texture(tex1, position);      // lines
-    if (quadrant == 2) return texture(tex2, position);      // faces
-    // quadrant 3 is composite, handled separately
-    return vec4(0);
-}
-
 // Get the fully composited pixel color at a given position
 vec4 getCompositeColor(vec2 position) {
     vec4 t2 = texture(tex2, position);
@@ -141,19 +132,19 @@ vec4 getCompositeColor(vec2 position) {
     return color;
 }
 
-// Apply analytical antialiasing using derivatives
-// Works for both composite and single texture views
-vec4 applyAnalyticalAA(int quadrant, vec2 position) {
-    vec2 texelSize = 1.0 / viewPortSize;
-    
-    // Use analytical filtering via derivatives
-    if (quadrant == 3) {
-        // Composite view - use full compositing with analytical checkerboard
-        return getCompositeColor(position);
-    } else {
-        // Single texture debug views - simple analytical filtering via derivatives
-        return getQuadrantColor(quadrant, position);
-    }
+vec2 hash22(vec2 p)
+{
+	vec3 p3 = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973));
+    p3 += dot(p3, p3.yzx+33.33);
+    return fract((p3.xx+p3.yz)*p3.zy);
+}
+
+// Get color for a specific quadrant (single texture layer for debug views)
+vec4 getQuadrantColor(int quadrant, vec2 position) {
+    if (quadrant == 0) return texture(tex0, position);      // points
+    if (quadrant == 1) return texture(tex1, position);      // lines
+    if (quadrant == 2) return texture(tex2, position);      // faces
+    return getCompositeColor(position);
 }
 
 void main() {
@@ -178,6 +169,5 @@ void main() {
         position = TexCoord - vec2(1.0);
     }
     
-    // Apply analytical antialiasing uniformly across all quadrants
-    FragColor = applyAnalyticalAA(quadrant, position);
+    FragColor = getQuadrantColor(quadrant, position);
 }
