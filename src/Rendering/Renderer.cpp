@@ -82,7 +82,7 @@ void Renderer::ProcessPendingUpdates(const FrameContext& context) {
   }
 }
 
-void Renderer::Render() {
+void Renderer::Render(const FrameContext& context) {
   // Always render if there's a pending pick (need fresh framebuffer data)
   if (!model_.ShouldRender() && !shouldUpdateUniforms_ && !hasPendingPick_) {
     return;
@@ -97,7 +97,10 @@ void Renderer::Render() {
 
   // Composite to screen
   screenPass_.Execute(device_, 6);
-  debugPass_.Execute(device_, 6);
+
+  if (context.debug) {
+    debugPass_.Execute(device_, 6);
+  }
 
   device_.EndFrame();
 

@@ -19,6 +19,8 @@ struct FrameContext {
   // ---- Interaction -------------------------------------------
   bool pickingEnabled = false;
 
+  bool debug = false;
+
   // Mouse position in framebuffer space (for picking)
   uint32_t mouseX = 0;
   uint32_t mouseY = 0;

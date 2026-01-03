@@ -61,6 +61,11 @@ bool Application::Start() {
   return true;
 }
 
+void Application::Debug() {
+  ctx.debug = !ctx.debug;
+  renderer.MarkDirty();
+}
+
 bool Application::Run() {
   // Capture input into FrameContext
   device.CaptureInput(ctx);
@@ -72,7 +77,7 @@ bool Application::Run() {
   }
 
   renderer.ProcessPendingUpdates(ctx);
-  renderer.Render();
+  renderer.Render(ctx);
 
   model.ResetDirtyFlags();
 

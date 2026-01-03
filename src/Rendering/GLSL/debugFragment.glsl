@@ -39,8 +39,8 @@ void main() {
     }
     else if (TexCoord.y < 0.5f )
     {
-        vec4 sample = texture(tex2, vec2(TexCoord.x, 2.0f * TexCoord.y));
-        uint faceId = decodeId(sample.r, sample.g);
+        vec4 color = texture(tex2, vec2(TexCoord.x, 2.0f * TexCoord.y));
+        uint faceId = decodeId(color.r, color.g);
         FragColor = faceId != 0u ? idToColor(faceId) : vec4(0);
     }
     else

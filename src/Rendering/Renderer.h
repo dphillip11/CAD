@@ -17,9 +17,10 @@ class Renderer {
   void Initialise();
 
   void ProcessPendingUpdates(const FrameContext& context);
-  void Render();
+  void Render(const FrameContext& context);
 
   void Resize(uint32_t width, uint32_t height);
+  void MarkDirty() { shouldUpdateUniforms_ = true; }
 
  private:
   void UpdateVertices();

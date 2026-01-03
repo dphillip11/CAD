@@ -10,6 +10,7 @@ class Application {
   Application();
   ~Application();
   bool Start();
+  void Debug();
   bool Run();
   bool Exit();
 

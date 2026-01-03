@@ -23,10 +23,10 @@ void emscripten_main_loop() {
 }
 
 // Test function to be called from JavaScript
-void testButtonClick() { std::cout << "Hello from C++! Button was clicked!" << std::endl; }
+void debug() { g_app->Debug(); }
 
 // Expose the function to JavaScript using Embind
-EMSCRIPTEN_BINDINGS(my_module) { emscripten::function("testButtonClick", &testButtonClick); }
+EMSCRIPTEN_BINDINGS(my_module) { emscripten::function("debugButtonClick", &debug); }
 #endif
 
 auto main() -> int {
