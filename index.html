@@ -106,7 +106,7 @@
         </div>
         
         <div class="controls-panel">
-            <button id="testButton" disabled>Test C++ Function</button>
+            <button id="debugButton" disabled>Debug</button>
             <label><input type="checkbox" id="resize"> Resize canvas</label>
             <label><input type="checkbox" id="pointerLock" checked> Lock/hide mouse pointer</label>
             <button onclick="Module.requestFullscreen(document.getElementById('pointerLock').checked, document.getElementById('resize').checked)">
@@ -127,7 +127,7 @@
         var spinnerElement = document.getElementById('spinner');
         var canvasElement = document.getElementById('canvas');
         var outputElement = document.getElementById('output');
-        var testButton = document.getElementById('testButton');
+        var debugButton = document.getElementById('debugButton');
         
         // Clear output
         if (outputElement) {
@@ -184,7 +184,7 @@
             },
             onRuntimeInitialized: function() {
                 // Enable the test button once the module is loaded
-                testButton.disabled = false;
+                debugButton.disabled = false;
                 console.log('Module loaded, functions are now available!');
             }
         };
@@ -200,9 +200,9 @@
         };
         
         // Button click handler
-        testButton.onclick = function() {
-            if (Module.testButtonClick) {
-                Module.testButtonClick();
+        debugButton.onclick = function() {
+            if (Module.debugButtonClick) {
+                Module.debugButtonClick();
             } else {
                 console.error('testButtonClick function not available yet');
             }
