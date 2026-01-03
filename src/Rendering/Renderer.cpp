@@ -94,10 +94,17 @@ void Renderer::UpdateFaceIndices() {
     device_.UpdateIndexBuffer(resources_.faceIndexBuffer, views_.faces.vertexIndices);
   }
 
-  // Upload face primitive IDs to texture buffer
+  // Upload face primitive IDs to 1D texture
   if (!views_.faces.primitiveIds.empty()) {
-    device_.UpdateTextureBuffer(resources_.faceIdTextureBuffer, resources_.faceIdBuffer,
-                                views_.faces.primitiveIds);
+    // Recreate texture with correct size if needed
+    if (views_.faces.primitiveIds.size() > 1) {  // Need to resize from initial dummy size
+      device_.DestroyTexture(resources_.faceIdTexture);
+      resources_.faceIdTexture = device_.CreateTexture1D(views_.faces.primitiveIds.size());
+      device_.BindTexture(resources_.faceIdTexture, 6);
+      device_.BindShader(resources_.basicShader);
+      device_.SetUniform("faceIdTexture", 6);
+    }
+    device_.UpdateTexture1D(resources_.faceIdTexture, views_.faces.primitiveIds);
   }
 }
 

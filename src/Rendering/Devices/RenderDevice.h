@@ -38,9 +38,9 @@ class RenderDevice {
   GpuHandle CreateBuffer();
   GpuHandle CreateFrameBuffer(GpuHandle colorHandle, GpuHandle depthHandle,
                               GpuHandle stencilHandle);
+  GpuHandle CreateTexture1D(uint32_t width);
   GpuHandle CreateTexture2D(float width, float height, bool generateMipmaps);
   GpuHandle CreateDepthTexture2D(float width, float height);
-  GpuHandle CreateTextureBuffer();
   GpuHandle CreateShader(const std::string& vertexSource, const std::string& fragmentSource,
                          const std::string& geometrySource = "");
 
@@ -52,8 +52,7 @@ class RenderDevice {
   void UpdateVertexBuffer(GpuHandle handle, size_t bytes, const void* data);
   void UpdateUniformBuffer(GpuHandle handle, size_t bytes, const void* data, uint32_t position);
   void UpdateIndexBuffer(GpuHandle handle, std::span<const uint32_t> indices);
-  void UpdateTextureBuffer(GpuHandle textureHandle, GpuHandle bufferHandle,
-                           std::span<const uint32_t> data);
+  void UpdateTexture1D(GpuHandle textureHandle, std::span<const uint32_t> data);
 
   // ----- Binding -----
   void BindPipeline(GpuHandle handle);
@@ -61,7 +60,6 @@ class RenderDevice {
   void SetVertexAttributes(GpuHandle handle, const std::span<VertexAttribute>& attributes);
   void BindIndexBuffer(GpuHandle handle);
   void BindTexture(GpuHandle handle, uint32_t index);
-  void BindTextureBuffer(GpuHandle handle, uint32_t index);
   void BindFrameBuffer(GpuHandle handle);
   void BindShader(GpuHandle shaderHandle);
 

@@ -26,6 +26,7 @@ constexpr const char* GLSL_VERSION_ES = "#version 300 es\n";
 constexpr const char* GLSL_PRECISION_ES = R"(
 precision highp float;
 precision highp int;
+precision highp usampler2D;
 )";
 
 constexpr const char* GLSL_UNIFORMS = R"(
@@ -51,8 +52,8 @@ uniform sampler2D depth0;
 uniform sampler2D depth1;
 uniform sampler2D depth2;
 
-// Primitive ID buffer (for geometry identification)
-uniform usamplerBuffer faceIdBuffer;
+// Primitive ID texture (for geometry identification)
+uniform usampler2D faceIdTexture;
 )";
 
 // Helper to get the appropriate version string based on platform

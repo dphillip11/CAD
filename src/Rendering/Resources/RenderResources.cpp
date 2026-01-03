@@ -27,13 +27,13 @@ void RenderResources::LoadResources(RenderDevice& device) {
   faceIndexBuffer = device.CreateBuffer();
   volumeIndexBuffer = device.CreateBuffer();
 
-  // primitive ID buffers
-  faceIdBuffer = device.CreateBuffer();
-  faceIdTextureBuffer = device.CreateTextureBuffer();
+  // primitive ID texture (1D texture stored as 2D, WebGL compatible)
+  faceIdTexture =
+      device.CreateTexture1D(1);  // Start with size 1, will be resized when data is loaded
 
   // Initialize with dummy data (will be updated when faces are loaded)
   std::vector<uint32_t> dummyIds = {0};
-  device.UpdateTextureBuffer(faceIdTextureBuffer, faceIdBuffer, dummyIds);
+  device.UpdateTexture1D(faceIdTexture, dummyIds);
 
   // uniforms
   frameUniformBuffer = device.CreateBuffer();
@@ -65,6 +65,7 @@ void RenderResources::LoadResources(RenderDevice& device) {
   basicShader = device.CreateShader(vertexSource, fragmentSource);
   device.BindShader(basicShader);
   device.UpdateUniformBuffer(frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
+  device.SetUniform("faceIdTexture", 6);
 
 #ifndef __EMSCRIPTEN__
   lineShader = device.CreateShader(vertexSource, lineFragmentSource, geometrySource);
@@ -101,7 +102,7 @@ void RenderResources::LoadResources(RenderDevice& device) {
   device.BindTexture(depthTexture0, 3);
   device.BindTexture(depthTexture1, 4);
   device.BindTexture(depthTexture2, 5);
-  device.BindTextureBuffer(faceIdTextureBuffer, 6);
+  device.BindTexture(faceIdTexture, 6);  // Bind the 1D texture for primitive IDs
 
   framebuffer0 = device.CreateFrameBuffer(texture0, depthTexture0, 0);
   framebuffer1 = device.CreateFrameBuffer(texture1, depthTexture1, 0);
