@@ -51,4 +51,5 @@ class Renderer {
   bool hasPendingPick_ = false;
   uint32_t pendingPickX_ = 0;
   uint32_t pendingPickY_ = 0;
+  uint32_t selectedFaceId_ = 0;
 };

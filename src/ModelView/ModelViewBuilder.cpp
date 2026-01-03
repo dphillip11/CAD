@@ -56,9 +56,9 @@ void ModelViewBuilder::BuildFaceView(FaceView& outFaces) {
       outFaces.vertices.push_back(vertices[idx2].position);
 
       // Store the actual Face ID once per vertex (3 times)
-      outFaces.primitiveIds.push_back(faceId);
-      outFaces.primitiveIds.push_back(faceId);
-      outFaces.primitiveIds.push_back(faceId);
+      outFaces.primitiveIds.push_back(faceId + 1);
+      outFaces.primitiveIds.push_back(faceId + 1);
+      outFaces.primitiveIds.push_back(faceId + 1);
     }
 
     ++faceIndex;

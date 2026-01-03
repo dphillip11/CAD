@@ -14,6 +14,7 @@ struct alignas(16) UniformBuffer {
   float axisLength = 0.15f;
   Mat4 viewMatrix = Mat4::Identity();
   Mat4 projectionMatrix = Mat4::Identity();
+  int32_t selectedFace;
 };
 
 // GLSL uniform block definition generated from the struct above
@@ -40,6 +41,7 @@ layout(std140) uniform GlobalUniforms
     float axisLength;
     mat4 viewMatrix;
     mat4 projectionMatrix;
+    int selectedFace;
 };
 )";
 

@@ -70,6 +70,12 @@ void Renderer::ProcessPendingUpdates(const FrameContext& context) {
     UpdateVolumeIndices();
   }
 
+  // Handle pending pick AFTER geometry is rendered but BEFORE screen composite
+  if (hasPendingPick_) {
+    HandlePick(pendingPickX_, pendingPickY_);
+    hasPendingPick_ = false;
+  }
+
   if (shouldUpdateUniforms_) {
     UpdateFrameContext(context);
   }
@@ -87,12 +93,6 @@ void Renderer::Render() {
   pointPass_.Execute(device_, model_.Vertices().size());
   facePass_.Execute(device_, views_.faces.vertices.size());  // Use vertices count (non-indexed)
   linePass_.Execute(device_, views_.lines.vertexIndices.size());
-
-  // Handle pending pick AFTER geometry is rendered but BEFORE screen composite
-  if (hasPendingPick_) {
-    HandlePick(pendingPickX_, pendingPickY_);
-    hasPendingPick_ = false;
-  }
 
   // Composite to screen
   screenPass_.Execute(device_, 6);
@@ -169,6 +169,7 @@ void Renderer::UpdateFrameContext(const FrameContext& context) {
   // Update viewport size for geometry shaders
   uniforms.viewPortSize[0] = static_cast<float>(context.viewportWidth);
   uniforms.viewPortSize[1] = static_cast<float>(context.viewportHeight);
+  uniforms.selectedFace = selectedFaceId_;
 
   device_.UpdateUniformBuffer(resources_.frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
 }
@@ -217,9 +218,14 @@ void Renderer::HandlePick(uint32_t mouseX, uint32_t mouseY) {
 
   // Convert to framebuffer pixel coordinates
   // Note: Framebuffer might be different resolution than window (e.g., retina displays)
+#ifdef __EMSCRIPTEN__
   uint32_t fbX = static_cast<uint32_t>(normalizedX * lastViewportWidth_);
   uint32_t fbY =
       static_cast<uint32_t>((1.0f - normalizedY) * lastViewportHeight_);  // Flip Y for OpenGL
+#else
+  uint32_t fbX = static_cast<uint32_t>(normalizedX * 2.0f * lastViewportWidth_);
+  uint32_t fbY = static_cast<uint32_t>((0.5f - normalizedY) * 2.0f * lastViewportHeight_);
+#endif
 
   std::cout << "Pick at window(" << mouseX << "," << mouseY << ") -> "
             << "normalized(" << normalizedX << "," << normalizedY << ") -> "
@@ -235,10 +241,11 @@ void Renderer::HandlePick(uint32_t mouseX, uint32_t mouseY) {
   std::cout << "Pixel bytes: R=" << (int)pixel[0] << " G=" << (int)pixel[1]
             << " B=" << (int)pixel[2] << " A=" << (int)pixel[3] << std::endl;
 
-  uint32_t faceId = (pixel[0] << 8) | pixel[1];
+  selectedFaceId_ = (pixel[0] << 8) | pixel[1];
 
-  if (faceId != 0) {
-    std::cout << "Picked face ID: " << faceId << std::endl;
+  if (selectedFaceId_ != 0) {
+    shouldUpdateUniforms_ = true;
+    std::cout << "Picked face ID: " << selectedFaceId_ - 1 << std::endl;
   } else {
     std::cout << "No face at pick location (background)" << std::endl;
   }

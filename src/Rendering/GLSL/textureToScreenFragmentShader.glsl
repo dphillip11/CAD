@@ -10,6 +10,8 @@ uint decodeId(float high, float low) {
 
 vec4 idToColor(uint id)
 {
+    if (int(id) == selectedFace) return vec4(1);
+
     const vec4 colors[10] = vec4[10](
         vec4(1.0, 0.3, 0.3, 1.0),  // Red
         vec4(0.3, 1.0, 0.3, 1.0),  // Green
