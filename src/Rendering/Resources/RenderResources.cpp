@@ -31,6 +31,10 @@ void RenderResources::LoadResources(RenderDevice& device) {
   faceIdBuffer = device.CreateBuffer();
   faceIdTextureBuffer = device.CreateTextureBuffer();
 
+  // Initialize with dummy data (will be updated when faces are loaded)
+  std::vector<uint32_t> dummyIds = {0};
+  device.UpdateTextureBuffer(faceIdTextureBuffer, faceIdBuffer, dummyIds);
+
   // uniforms
   frameUniformBuffer = device.CreateBuffer();
   UniformBuffer uniforms;

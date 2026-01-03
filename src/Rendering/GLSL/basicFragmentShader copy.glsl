@@ -19,9 +19,5 @@ vec4 idToColor(uint id)
 }
 
 void main() {
-    // Sample the face ID from the texture buffer using gl_PrimitiveID
-    uint faceId = texelFetch(faceIdBuffer, gl_PrimitiveID).r;
-    
-    // Convert face ID to a color
-    FragColor = idToColor(faceId);
+    FragColor = faceColor;
 }
