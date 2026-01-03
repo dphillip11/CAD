@@ -96,3 +96,4 @@ src/
 
 Rendering is split into how and what, the render pass deals with the more static configuration.
 GPU resources are allocated to the gpu by the resources class, updating the buffers(vertices, indices, uniforms) and changing buffer configuration should be handled by the renderer class and this will be the hub for responding to callbacks once the render loop becomes event driven.
+

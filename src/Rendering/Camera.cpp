@@ -48,7 +48,7 @@ void Camera::SetNearFar(float near, float far) {
 void Camera::Orbit(float deltaX, float deltaY) {
   // Convert mouse deltas to rotation angles (scale as needed)
   const float sensitivity = 0.005f;
-  float deltaYaw = deltaX * sensitivity;
+  float deltaYaw = -deltaX * sensitivity;
   float deltaPitch = deltaY * sensitivity;
 
   // Get current camera direction
