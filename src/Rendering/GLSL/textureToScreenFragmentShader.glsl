@@ -1,6 +1,31 @@
 out vec4 FragColor;
 in vec2 TexCoord;
 
+// Decode two normalized floats back to a 16-bit ID (0-65535)
+uint decodeId(float high, float low) {
+    uint highBits = uint(high * 255.0 + 0.5);
+    uint lowBits = uint(low * 255.0 + 0.5);
+    return (highBits << 8u) | lowBits;
+}
+
+vec4 idToColor(uint id)
+{
+    const vec4 colors[10] = vec4[10](
+        vec4(1.0, 0.3, 0.3, 1.0),  // Red
+        vec4(0.3, 1.0, 0.3, 1.0),  // Green
+        vec4(0.3, 0.3, 1.0, 1.0),  // Blue
+        vec4(1.0, 1.0, 0.3, 1.0),  // Yellow
+        vec4(1.0, 0.3, 1.0, 1.0),  // Magenta
+        vec4(0.3, 1.0, 1.0, 1.0),  // Cyan
+        vec4(1.0, 0.6, 0.3, 1.0),  // Orange
+        vec4(0.6, 0.3, 1.0, 1.0),  // Purple
+        vec4(0.3, 1.0, 0.6, 1.0),  // Mint
+        vec4(1.0, 0.8, 0.5, 1.0)   // Peach
+    );
+    
+    return colors[id % 10u];
+}
+
 // Ray-plane intersection for ground plane at y=0
 bool rayPlaneIntersect(vec3 rayOrigin, vec3 rayDir, out vec3 hitPoint) {
     float t = -rayOrigin.y / rayDir.y;
@@ -49,6 +74,8 @@ vec3 skyColor(float rayY) {
 // Get the fully composited pixel color at a given position
 vec4 getCompositeColor(vec2 position) {
     vec4 t2 = texture(tex2, position);
+    uint faceId = decodeId(t2.r, t2.g);
+    t2 = idToColor(faceId);
     vec4 t1 = texture(tex1, position);
     vec4 t0 = texture(tex0, position);
     
@@ -136,7 +163,12 @@ vec2 hash22(vec2 p)
 vec4 getQuadrantColor(int quadrant, vec2 position) {
     if (quadrant == 0) return texture(tex0, position);      // points
     if (quadrant == 1) return texture(tex1, position);      // lines
-    if (quadrant == 2) return texture(tex2, position);      // faces
+    if (quadrant == 2)
+    {
+        vec4 t2 = texture(tex2, position);
+        uint faceId = decodeId(t2.r, t2.g);
+        return idToColor(faceId);
+    }
     return getCompositeColor(position);
 }
 

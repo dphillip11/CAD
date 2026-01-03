@@ -2,26 +2,17 @@ out vec4 FragColor;
 
 flat in uint vPrimitiveId;
 
-vec4 idToColor(uint id)
-{
-    const vec4 colors[10] = vec4[10](
-        vec4(1.0, 0.3, 0.3, 1.0),  // Red
-        vec4(0.3, 1.0, 0.3, 1.0),  // Green
-        vec4(0.3, 0.3, 1.0, 1.0),  // Blue
-        vec4(1.0, 1.0, 0.3, 1.0),  // Yellow
-        vec4(1.0, 0.3, 1.0, 1.0),  // Magenta
-        vec4(0.3, 1.0, 1.0, 1.0),  // Cyan
-        vec4(1.0, 0.6, 0.3, 1.0),  // Orange
-        vec4(0.6, 0.3, 1.0, 1.0),  // Purple
-        vec4(0.3, 1.0, 0.6, 1.0),  // Mint
-        vec4(1.0, 0.8, 0.5, 1.0)   // Peach
-    );
-    
-    return colors[id % 10u];
+// Split 32-bit ID into two 8-bit components and encode as normalized floats
+void encodeId(uint id, out float high, out float low) {
+    uint highBits = (id >> 8u) & 0xFFu;  // Upper 8 bits
+    uint lowBits = id & 0xFFu;            // Lower 8 bits
+    high = float(highBits) / 255.0;
+    low = float(lowBits) / 255.0;
 }
 
 void main() {
-    
-    // Convert face ID to a color
-    FragColor = idToColor(vPrimitiveId);
+    // 16-bit version (for IDs up to 65535):
+    float high, low;
+    encodeId(vPrimitiveId, high, low);
+    FragColor = vec4(high, low, 0, 1.0);
 }
