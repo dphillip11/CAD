@@ -13,6 +13,7 @@ class RenderResources {
   const RenderPass BuildLinePass();
   const RenderPass BuildFacePass();
   const RenderPass BuildScreenPass();
+  const RenderPass BuildDebugPass();
 
   // vertices
   GpuHandle vertexBuffer;
@@ -31,6 +32,7 @@ class RenderResources {
   GpuHandle basicShader;
   GpuHandle lineShader;
   GpuHandle screenShader;
+  GpuHandle debugShader;
   // render textures
   GpuHandle framebuffer0;
   GpuHandle texture0;

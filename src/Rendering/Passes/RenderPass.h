@@ -21,6 +21,9 @@ struct RenderPass {
   bool clearOnBind = true;
   float clearColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
+  // Blending settings
+  bool blendEnabled = false;
+
   // Viewport settings
   int viewportX = 0;
   int viewportY = 0;

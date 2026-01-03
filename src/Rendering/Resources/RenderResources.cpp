@@ -49,6 +49,8 @@ void RenderResources::LoadResources(RenderDevice& device) {
   const std::string renderTexFragmentSource = IO::LoadSource("textureToScreenFragmentShader.glsl");
   const std::string pointVertexSource = IO::LoadSource("pointVertex.glsl");
   const std::string pointFragmentSource = IO::LoadSource("pointFragment.glsl");
+  const std::string debugVertexSource = IO::LoadSource("debugVertex.glsl");
+  const std::string debugFragmentSource = IO::LoadSource("debugFragment.glsl");
 
 #ifndef __EMSCRIPTEN__
   // Geometry shaders are not supported in WebGL/OpenGL ES
@@ -88,6 +90,17 @@ void RenderResources::LoadResources(RenderDevice& device) {
   device.SetUniform("depth1", 4);
   device.SetUniform("depth2", 5);
 
+  debugShader = device.CreateShader(debugVertexSource, debugFragmentSource);
+  device.BindShader(debugShader);
+  device.UpdateUniformBuffer(frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
+
+  device.SetUniform("tex0", 0);
+  device.SetUniform("tex1", 1);
+  device.SetUniform("tex2", 2);
+  device.SetUniform("depth0", 3);
+  device.SetUniform("depth1", 4);
+  device.SetUniform("depth2", 5);
+
   // render textures - use actual framebuffer size
   texture0 = device.CreateTexture2D(fbWidth, fbHeight, false);
   texture1 = device.CreateTexture2D(fbWidth, fbHeight, false);
@@ -115,10 +128,10 @@ void RenderResources::LoadResources(RenderDevice& device) {
 
   std::vector<float> quadVertices = {
       // Positions         // Texture Coords
-      -1.0f, 1.0f,  0.0f, 0.0f, 2.0f,  // Top-left
+      -1.0f, 1.0f,  0.0f, 0.0f, 1.0f,  // Top-left
       -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,  // Bottom-left
-      1.0f,  -1.0f, 0.0f, 2.0f, 0.0f,  // Bottom-right
-      1.0f,  1.0f,  0.0f, 2.0f, 2.0f   // Top-right
+      1.0f,  -1.0f, 0.0f, 1.0f, 0.0f,  // Bottom-right
+      1.0f,  1.0f,  0.0f, 1.0f, 1.0f   // Top-right
   };
 
   std::vector<uint32_t> quadIndices = {
@@ -213,10 +226,29 @@ const RenderPass RenderResources::BuildScreenPass() {
   pass.shaderProgram = screenShader;
   pass.frameBuffer = 0;
   pass.clearOnBind = true;
-  pass.clearColor[0] = 1.0f;  // R
-  pass.clearColor[1] = 0.2f;  // G
-  pass.clearColor[2] = 0.2f;  // B
+  pass.clearColor[0] = .8f;   // R
+  pass.clearColor[1] = .8f;   // G
+  pass.clearColor[2] = .8f;   // B
   pass.clearColor[3] = 1.0f;  // A
+  pass.viewportX = 0;
+  pass.viewportY = 0;
+  pass.viewportWidth = fbWidth;
+  pass.viewportHeight = fbHeight;
+
+  return pass;
+}
+
+const RenderPass RenderResources::BuildDebugPass() {
+  RenderPass pass;
+
+  pass.pipeline = screenPipeline;
+  pass.vertexBuffer = fullscreenQuadVertexBuffer;
+  pass.indexBuffer = fullscreenQuadIndexBuffer;
+  pass.topology = PrimitiveTopology::Triangles;
+  pass.shaderProgram = debugShader;
+  pass.frameBuffer = 0;
+  pass.clearOnBind = false;
+  pass.blendEnabled = true;  // Enable alpha blending
   pass.viewportX = 0;
   pass.viewportY = 0;
   pass.viewportWidth = fbWidth;

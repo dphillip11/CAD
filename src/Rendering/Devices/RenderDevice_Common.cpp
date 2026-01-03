@@ -320,6 +320,13 @@ void RenderDevice::SetClearColor(float r, float g, float b, float a) { glClearCo
 
 void RenderDevice::Clear() { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
 
+void RenderDevice::EnableBlending() {
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+void RenderDevice::DisableBlending() { glDisable(GL_BLEND); }
+
 void RenderDevice::BeginFrame() {
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);  // White background
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

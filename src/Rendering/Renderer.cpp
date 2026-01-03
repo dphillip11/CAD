@@ -23,6 +23,7 @@ void Renderer::Initialise() {
   facePass_ = resources_.BuildFacePass();
   linePass_ = resources_.BuildLinePass();
   screenPass_ = resources_.BuildScreenPass();
+  debugPass_ = resources_.BuildDebugPass();
 }
 
 void Renderer::ProcessPendingUpdates(const FrameContext& context) {
@@ -96,6 +97,7 @@ void Renderer::Render() {
 
   // Composite to screen
   screenPass_.Execute(device_, 6);
+  debugPass_.Execute(device_, 6);
 
   device_.EndFrame();
 
@@ -210,26 +212,14 @@ void Renderer::HandleViewportResize(uint32_t width, uint32_t height) {
 }
 
 void Renderer::HandlePick(uint32_t mouseX, uint32_t mouseY) {
-  // we use top right and left for face selection
-  float normalizedX = 2.0f * static_cast<float>(mouseX) / static_cast<float>(lastViewportWidth_);
-  float normalizedY = 2.0f * static_cast<float>(mouseY) / static_cast<float>(lastViewportHeight_);
-  if (normalizedX > 1.0f) normalizedX -= 1.0f;
-  if (normalizedY > 1.0f) normalizedY -= 1.0f;
-
-  // Convert to framebuffer pixel coordinates
-  // Note: Framebuffer might be different resolution than window (e.g., retina displays)
-#ifdef __EMSCRIPTEN__
-  uint32_t fbX = static_cast<uint32_t>(normalizedX * lastViewportWidth_);
-  uint32_t fbY =
-      static_cast<uint32_t>((1.0f - normalizedY) * lastViewportHeight_);  // Flip Y for OpenGL
-#else
-  uint32_t fbX = static_cast<uint32_t>(normalizedX * 2.0f * lastViewportWidth_);
-  uint32_t fbY = static_cast<uint32_t>((0.5f - normalizedY) * 2.0f * lastViewportHeight_);
+#ifndef __EMSCRIPTEN__
+  // Mac retina thing it seems
+  mouseX *= 2;
+  mouseY *= 2;
 #endif
 
-  std::cout << "Pick at window(" << mouseX << "," << mouseY << ") -> "
-            << "normalized(" << normalizedX << "," << normalizedY << ") -> "
-            << "fb(" << fbX << "," << fbY << ")" << std::endl;
+  uint32_t fbX = mouseX;
+  uint32_t fbY = lastViewportHeight_ - mouseY;
 
   // Bind the face framebuffer to read from (texture2)
   device_.BindFrameBuffer(resources_.framebuffer2);
@@ -238,15 +228,10 @@ void Renderer::HandlePick(uint32_t mouseX, uint32_t mouseY) {
   uint8_t pixel[4];
   device_.ReadPixel(fbX, fbY, pixel);
 
-  std::cout << "Pixel bytes: R=" << (int)pixel[0] << " G=" << (int)pixel[1]
-            << " B=" << (int)pixel[2] << " A=" << (int)pixel[3] << std::endl;
-
   selectedFaceId_ = (pixel[0] << 8) | pixel[1];
+  shouldUpdateUniforms_ = true;
 
   if (selectedFaceId_ != 0) {
-    shouldUpdateUniforms_ = true;
     std::cout << "Picked face ID: " << selectedFaceId_ - 1 << std::endl;
-  } else {
-    std::cout << "No face at pick location (background)" << std::endl;
   }
 }

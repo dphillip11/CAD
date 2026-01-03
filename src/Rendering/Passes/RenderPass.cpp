@@ -23,6 +23,13 @@ void RenderPass::Execute(RenderDevice& device, size_t count) const {
     device.Clear();
   }
 
+  // Enable or disable blending
+  if (blendEnabled) {
+    device.EnableBlending();
+  } else {
+    device.DisableBlending();
+  }
+
   device.BindShader(shaderProgram);
 
   if (indexBuffer != 0) {

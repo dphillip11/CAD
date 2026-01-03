@@ -46,6 +46,7 @@ class Renderer {
   RenderPass linePass_;
   RenderPass facePass_;
   RenderPass screenPass_;
+  RenderPass debugPass_;
 
   // Pending pick request (to be processed after face rendering)
   bool hasPendingPick_ = false;

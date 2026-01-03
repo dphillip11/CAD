@@ -77,7 +77,7 @@ vec3 skyColor(float rayY) {
 vec4 getCompositeColor(vec2 position) {
     vec4 t2 = texture(tex2, position);
     uint faceId = decodeId(t2.r, t2.g);
-    t2 = idToColor(faceId);
+    t2 = faceId != 0u ? idToColor(faceId) : vec4(0);
     vec4 t1 = texture(tex1, position);
     vec4 t0 = texture(tex0, position);
     
@@ -154,47 +154,6 @@ vec4 getCompositeColor(vec2 position) {
     return color;
 }
 
-vec2 hash22(vec2 p)
-{
-	vec3 p3 = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973));
-    p3 += dot(p3, p3.yzx+33.33);
-    return fract((p3.xx+p3.yz)*p3.zy);
-}
-
-// Get color for a specific quadrant (single texture layer for debug views)
-vec4 getQuadrantColor(int quadrant, vec2 position) {
-    if (quadrant == 0) return texture(tex0, position);      // points
-    if (quadrant == 1) return texture(tex1, position);      // lines
-    if (quadrant == 2)
-    {
-        vec4 t2 = texture(tex2, position);
-        uint faceId = decodeId(t2.r, t2.g);
-        return idToColor(faceId);
-    }
-    return getCompositeColor(position);
-}
-
-void main() {
-    // Determine which quadrant we're rendering and normalized position
-    int quadrant;
-    vec2 position;
-    
-    if (TexCoord.x < 1.0 && TexCoord.y < 1.0) {
-        quadrant = 0;  // bottom left - points
-        position = TexCoord;
-    }
-    else if (TexCoord.y < 1.0) {
-        quadrant = 1;  // bottom right - lines
-        position = vec2(TexCoord.x - 1.0, TexCoord.y);
-    }
-    else if (TexCoord.x < 1.0) {
-        quadrant = 2;  // top left - faces
-        position = vec2(TexCoord.x, TexCoord.y - 1.0);
-    }
-    else {
-        quadrant = 3;  // top right - composite
-        position = TexCoord - vec2(1.0);
-    }
-    
-    FragColor = getQuadrantColor(quadrant, position);
+void main() {    
+    FragColor = getCompositeColor(TexCoord);
 }

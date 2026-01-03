@@ -84,6 +84,10 @@ class RenderDevice {
   void SetClearColor(float r, float g, float b, float a);
   void Clear();
 
+  // ----- Blending -----
+  void EnableBlending();
+  void DisableBlending();
+
   // ----- Frame control -----
   void BeginFrame();
   void EndFrame();
