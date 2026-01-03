@@ -63,6 +63,9 @@ class RenderDevice {
   void BindFrameBuffer(GpuHandle handle);
   void BindShader(GpuHandle shaderHandle);
 
+  // ----- Picking -----
+  void ReadPixel(uint32_t x, uint32_t y, uint8_t* rgba);
+
   // ----- Uniforms -----
   void SetUniform(const std::string& name, const Vec3& vec);
   void SetUniform(const std::string& name, float valueA, float valueB);

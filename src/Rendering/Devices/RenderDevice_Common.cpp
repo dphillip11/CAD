@@ -215,6 +215,11 @@ void RenderDevice::BindTexture(GpuHandle handle, const uint32_t index) {
 
 void RenderDevice::BindFrameBuffer(GpuHandle handle) { glBindFramebuffer(GL_FRAMEBUFFER, handle); }
 
+void RenderDevice::ReadPixel(uint32_t x, uint32_t y, uint8_t* rgba) {
+  // Note: Coordinates are in framebuffer space with origin at bottom-left
+  glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+}
+
 void RenderDevice::SetUniform(const std::string& name, const Vec3& vec) {
   GLint location = GetUniformLocation(name);
 

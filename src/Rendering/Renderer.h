@@ -29,6 +29,7 @@ class Renderer {
   void UpdateFrameContext(const FrameContext& context);
   void ProcessInput(const FrameContext::InputState& input);
   void HandleViewportResize(uint32_t width, uint32_t height);
+  void HandlePick(uint32_t mouseX, uint32_t mouseY);
 
   RenderDevice& device_;
   const Model& model_;
@@ -45,4 +46,9 @@ class Renderer {
   RenderPass linePass_;
   RenderPass facePass_;
   RenderPass screenPass_;
+
+  // Pending pick request (to be processed after face rendering)
+  bool hasPendingPick_ = false;
+  uint32_t pendingPickX_ = 0;
+  uint32_t pendingPickY_ = 0;
 };

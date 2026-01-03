@@ -29,6 +29,23 @@ void Renderer::ProcessPendingUpdates(const FrameContext& context) {
   // Process input first
   ProcessInput(context.input);
 
+  // Handle picking on right mouse click
+  static bool wasRightMouseDown = false;
+  if (context.input.mouseRightDown) {
+    // Only pick on first frame of click (detect click event)
+    if (!wasRightMouseDown) {
+      std::cout << "Right click detected at (" << context.input.mouseX << ", "
+                << context.input.mouseY << ")" << std::endl;
+      // Store pick request to be processed after rendering
+      hasPendingPick_ = true;
+      pendingPickX_ = static_cast<uint32_t>(context.input.mouseX);
+      pendingPickY_ = static_cast<uint32_t>(context.input.mouseY);
+    }
+    wasRightMouseDown = true;
+  } else {
+    wasRightMouseDown = false;
+  }
+
   // Check for viewport resize
   if (context.viewportWidth != 0 && context.viewportHeight != 0) {
     if (context.viewportWidth != lastViewportWidth_ ||
@@ -59,15 +76,25 @@ void Renderer::ProcessPendingUpdates(const FrameContext& context) {
 }
 
 void Renderer::Render() {
-  if (!model_.ShouldRender() && !shouldUpdateUniforms_) {
+  // Always render if there's a pending pick (need fresh framebuffer data)
+  if (!model_.ShouldRender() && !shouldUpdateUniforms_ && !hasPendingPick_) {
     return;
   }
 
   device_.BeginFrame();
 
+  // Render geometry to framebuffers
   pointPass_.Execute(device_, model_.Vertices().size());
   facePass_.Execute(device_, views_.faces.vertices.size());  // Use vertices count (non-indexed)
   linePass_.Execute(device_, views_.lines.vertexIndices.size());
+
+  // Handle pending pick AFTER geometry is rendered but BEFORE screen composite
+  if (hasPendingPick_) {
+    HandlePick(pendingPickX_, pendingPickY_);
+    hasPendingPick_ = false;
+  }
+
+  // Composite to screen
   screenPass_.Execute(device_, 6);
 
   device_.EndFrame();
@@ -179,4 +206,40 @@ void Renderer::HandleViewportResize(uint32_t width, uint32_t height) {
   lastViewportWidth_ = width;
   lastViewportHeight_ = height;
   shouldUpdateUniforms_ = true;
+}
+
+void Renderer::HandlePick(uint32_t mouseX, uint32_t mouseY) {
+  // we use top right and left for face selection
+  float normalizedX = 2.0f * static_cast<float>(mouseX) / static_cast<float>(lastViewportWidth_);
+  float normalizedY = 2.0f * static_cast<float>(mouseY) / static_cast<float>(lastViewportHeight_);
+  if (normalizedX > 1.0f) normalizedX -= 1.0f;
+  if (normalizedY > 1.0f) normalizedY -= 1.0f;
+
+  // Convert to framebuffer pixel coordinates
+  // Note: Framebuffer might be different resolution than window (e.g., retina displays)
+  uint32_t fbX = static_cast<uint32_t>(normalizedX * lastViewportWidth_);
+  uint32_t fbY =
+      static_cast<uint32_t>((1.0f - normalizedY) * lastViewportHeight_);  // Flip Y for OpenGL
+
+  std::cout << "Pick at window(" << mouseX << "," << mouseY << ") -> "
+            << "normalized(" << normalizedX << "," << normalizedY << ") -> "
+            << "fb(" << fbX << "," << fbY << ")" << std::endl;
+
+  // Bind the face framebuffer to read from (texture2)
+  device_.BindFrameBuffer(resources_.framebuffer2);
+
+  // Read RGBA pixel as bytes
+  uint8_t pixel[4];
+  device_.ReadPixel(fbX, fbY, pixel);
+
+  std::cout << "Pixel bytes: R=" << (int)pixel[0] << " G=" << (int)pixel[1]
+            << " B=" << (int)pixel[2] << " A=" << (int)pixel[3] << std::endl;
+
+  uint32_t faceId = (pixel[0] << 8) | pixel[1];
+
+  if (faceId != 0) {
+    std::cout << "Picked face ID: " << faceId << std::endl;
+  } else {
+    std::cout << "No face at pick location (background)" << std::endl;
+  }
 }
