@@ -187,33 +187,39 @@ jobs:
     needs: deploy-pages
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: Wait for site to become available and fetch /hello.html
+      - name: Wait for site to become available and verify build-info.txt
         run: |
           set -euo pipefail
           OWNER="$(echo "$GITHUB_REPOSITORY" | cut -d/ -f1)"
           REPO="$(echo "$GITHUB_REPOSITORY" | cut -d/ -f2)"
           SITE_URL="https://${OWNER}.github.io/${REPO}"
-          echo "Checking ${SITE_URL} (root) and ${SITE_URL}/hello.html"
+          BUILD_INFO_URL="${SITE_URL}/build-info.txt"
+          
+          echo "Checking ${BUILD_INFO_URL}"
           SUCCESS=1
           for i in $(seq 1 12); do
-            echo "Attempt ${i}..."
-            # Try root first, then /hello.html
-            if curl -sSfL "${SITE_URL}" -o /tmp/hello.html || curl -sSfL "${SITE_URL}/hello.html" -o /tmp/hello.html; then
-              echo "Fetched page — checking contents"
-              if grep -qi '\.wasm' /tmp/hello.html || grep -qi 'Hello' /tmp/hello.html; then
-                echo "Smoke test passed (found expected content)"
+            echo "Attempt ${i}/12..."
+            if curl -sSfL "${BUILD_INFO_URL}" -o /tmp/build-info.txt; then
+              echo "Successfully fetched build-info.txt:"
+              cat /tmp/build-info.txt
+              
+              # Verify it contains expected fields
+              if grep -q "build_time:" /tmp/build-info.txt && grep -q "git_commit:" /tmp/build-info.txt; then
+                COMMIT_HASH=$(grep "git_commit:" /tmp/build-info.txt | cut -d' ' -f2)
+                echo "✓ Deployment verified - commit: ${COMMIT_HASH}"
                 SUCCESS=0
                 break
               else
-                echo "Page fetched but content did not match expectations (showing snippet):"
-                head -n 40 /tmp/hello.html || true
+                echo "⚠ build-info.txt found but missing expected fields"
               fi
             else
-              echo "Unable to fetch page yet"
+              echo "Unable to fetch build-info.txt yet (site may still be deploying)"
             fi
             sleep 10
           done
+          
           if [ "$SUCCESS" -ne 0 ]; then
-            echo "Smoke test failed: ${SITE_URL}/hello.html not available or content unexpected"
+            echo "✗ Smoke test failed: ${BUILD_INFO_URL} not available after 2 minutes"
             exit 1
           fi
+

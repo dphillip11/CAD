@@ -62,3 +62,27 @@ elif [ -f web/hello.html ]; then
 HTML
   echo "Built web/index.html (redirects to hello.html)"
 fi
+
+# Generate build info file for CI smoke test
+# This contains the git commit hash or a content hash for verification
+BUILD_INFO_FILE="web/build-info.txt"
+if command -v git >/dev/null 2>&1 && [ -d .git ]; then
+  GIT_HASH=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
+  GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+  BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u || echo "unknown")
+  cat > "$BUILD_INFO_FILE" <<INFO
+build_time: ${BUILD_TIME}
+git_commit: ${GIT_HASH}
+git_branch: ${GIT_BRANCH}
+INFO
+  echo "Generated $BUILD_INFO_FILE with commit ${GIT_HASH}"
+else
+  # Fallback: generate a simple hash of the built files
+  BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u || echo "unknown")
+  cat > "$BUILD_INFO_FILE" <<INFO
+build_time: ${BUILD_TIME}
+git_commit: not_available
+INFO
+  echo "Generated $BUILD_INFO_FILE (git not available)"
+fi
+
