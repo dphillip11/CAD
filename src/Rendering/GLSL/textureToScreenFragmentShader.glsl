@@ -1,10 +1,3 @@
-uniform sampler2D tex0;
-uniform sampler2D tex1;
-uniform sampler2D tex2;
-uniform sampler2D depth0;
-uniform sampler2D depth1;
-uniform sampler2D depth2;
-
 out vec4 FragColor;
 in vec2 TexCoord;
 

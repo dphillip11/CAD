@@ -24,6 +24,9 @@ class RenderResources {
   GpuHandle volumeIndexBuffer;
   GpuHandle fullscreenQuadIndexBuffer;
   GpuHandle pointCrossIndexBuffer;  // Indices for point cross template
+  // primitive ID buffers (texture buffers for accessing in shaders)
+  GpuHandle faceIdTextureBuffer;  // Texture buffer for face primitive IDs
+  GpuHandle faceIdBuffer;         // Underlying buffer for face IDs
   // shaders
   GpuHandle pointShader;
   GpuHandle basicShader;

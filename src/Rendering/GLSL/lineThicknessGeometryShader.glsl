@@ -1,6 +1,3 @@
-uniform sampler2D tex0;
-uniform sampler2D tex1;
-uniform sampler2D tex2;
 
 layout(lines) in;
 layout(triangle_strip, max_vertices = 4) out;

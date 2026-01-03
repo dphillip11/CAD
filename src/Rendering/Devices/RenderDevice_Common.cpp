@@ -73,6 +73,12 @@ GpuHandle RenderDevice::CreateDepthTexture2D(const float width, const float heig
   return textureId;
 }
 
+GpuHandle RenderDevice::CreateTextureBuffer() {
+  GLuint textureId;
+  glGenTextures(1, &textureId);
+  return textureId;
+}
+
 GpuHandle RenderDevice::CreateFrameBuffer(GpuHandle colorHandle, GpuHandle depthHandle,
                                           GpuHandle stencilHandle) {
   GLuint fboId;
@@ -145,6 +151,20 @@ void RenderDevice::UpdateIndexBuffer(GpuHandle handle, std::span<const uint32_t>
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
+void RenderDevice::UpdateTextureBuffer(GpuHandle textureHandle, GpuHandle bufferHandle,
+                                       std::span<const uint32_t> data) {
+  // Update the buffer data
+  glBindBuffer(GL_TEXTURE_BUFFER, bufferHandle);
+  glBufferData(GL_TEXTURE_BUFFER, data.size() * sizeof(uint32_t), data.data(), GL_STATIC_DRAW);
+
+  // Attach buffer to texture (texture should already be bound to a texture unit)
+  glBindTexture(GL_TEXTURE_BUFFER, textureHandle);
+  glTexBuffer(GL_TEXTURE_BUFFER, GL_R32UI, bufferHandle);
+
+  glBindBuffer(GL_TEXTURE_BUFFER, 0);
+  // Note: Don't unbind texture - it should remain bound to its texture unit
+}
+
 void RenderDevice::BindPipeline(GpuHandle handle) { glBindVertexArray(handle); }
 
 void RenderDevice::BindVertexBuffer(GpuHandle handle) { glBindBuffer(GL_ARRAY_BUFFER, handle); }
@@ -186,6 +206,11 @@ void RenderDevice::BindShader(GpuHandle shaderHandle) {
 void RenderDevice::BindTexture(GpuHandle handle, const uint32_t index) {
   glActiveTexture(GL_TEXTURE0 + index);
   glBindTexture(GL_TEXTURE_2D, handle);
+}
+
+void RenderDevice::BindTextureBuffer(GpuHandle handle, const uint32_t index) {
+  glActiveTexture(GL_TEXTURE0 + index);
+  glBindTexture(GL_TEXTURE_BUFFER, handle);
 }
 
 void RenderDevice::BindFrameBuffer(GpuHandle handle) { glBindFramebuffer(GL_FRAMEBUFFER, handle); }

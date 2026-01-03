@@ -27,6 +27,10 @@ void RenderResources::LoadResources(RenderDevice& device) {
   faceIndexBuffer = device.CreateBuffer();
   volumeIndexBuffer = device.CreateBuffer();
 
+  // primitive ID buffers
+  faceIdBuffer = device.CreateBuffer();
+  faceIdTextureBuffer = device.CreateTextureBuffer();
+
   // uniforms
   frameUniformBuffer = device.CreateBuffer();
   UniformBuffer uniforms;
@@ -69,12 +73,14 @@ void RenderResources::LoadResources(RenderDevice& device) {
   screenShader = device.CreateShader(textureVertexSource, renderTexFragmentSource);
   device.BindShader(screenShader);
   device.UpdateUniformBuffer(frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
+
   device.SetUniform("tex0", 0);
   device.SetUniform("tex1", 1);
   device.SetUniform("tex2", 2);
   device.SetUniform("depth0", 3);
   device.SetUniform("depth1", 4);
   device.SetUniform("depth2", 5);
+  device.SetUniform("faceIdBuffer", 6);
 
   // render textures - use actual framebuffer size
   texture0 = device.CreateTexture2D(fbWidth, fbHeight, false);
@@ -91,6 +97,7 @@ void RenderResources::LoadResources(RenderDevice& device) {
   device.BindTexture(depthTexture0, 3);
   device.BindTexture(depthTexture1, 4);
   device.BindTexture(depthTexture2, 5);
+  device.BindTextureBuffer(faceIdTextureBuffer, 6);
 
   framebuffer0 = device.CreateFrameBuffer(texture0, depthTexture0, 0);
   framebuffer1 = device.CreateFrameBuffer(texture1, depthTexture1, 0);

@@ -93,6 +93,12 @@ void Renderer::UpdateFaceIndices() {
   if (!views_.faces.vertexIndices.empty()) {
     device_.UpdateIndexBuffer(resources_.faceIndexBuffer, views_.faces.vertexIndices);
   }
+
+  // Upload face primitive IDs to texture buffer
+  if (!views_.faces.primitiveIds.empty()) {
+    device_.UpdateTextureBuffer(resources_.faceIdTextureBuffer, resources_.faceIdBuffer,
+                                views_.faces.primitiveIds);
+  }
 }
 
 void Renderer::UpdateVolumeIndices() {

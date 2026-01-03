@@ -19,7 +19,6 @@ void ModelViewBuilder::BuildLineView(LineView& outLines) {
 
     // same primitive index for both vertices
     outLines.primitiveIds.push_back(edgeIndex);
-    outLines.primitiveIds.push_back(edgeIndex);
 
     ++edgeIndex;
   }
@@ -48,8 +47,6 @@ void ModelViewBuilder::BuildFaceView(FaceView& outFaces) {
       outFaces.vertexIndices.push_back(model_.VertexIdToIndex(verts[i + 1]));
 
       outFaces.primitiveIds.push_back(faceIndex);
-      outFaces.primitiveIds.push_back(faceIndex);
-      outFaces.primitiveIds.push_back(faceIndex);
     }
 
     ++faceIndex;
@@ -58,7 +55,7 @@ void ModelViewBuilder::BuildFaceView(FaceView& outFaces) {
   outFaces.primitiveCount = faceIndex;
 }
 
-void ModelViewBuilder::BuildVolumeView(FaceView& outVolumes) {
+void ModelViewBuilder::BuildVolumeView(VolumeView& outVolumes) {
   outVolumes.Clear();
 
   const auto& volumes = model_.Volumes();
@@ -77,8 +74,6 @@ void ModelViewBuilder::BuildVolumeView(FaceView& outVolumes) {
         outVolumes.vertexIndices.push_back(model_.VertexIdToIndex(verts[i]));
         outVolumes.vertexIndices.push_back(model_.VertexIdToIndex(verts[i + 1]));
 
-        outVolumes.primitiveIds.push_back(volumeIndex);
-        outVolumes.primitiveIds.push_back(volumeIndex);
         outVolumes.primitiveIds.push_back(volumeIndex);
       }
     }

@@ -4,9 +4,10 @@
 
 #include "Core/Primitives.h"
 
+template <typename T>
 struct ModelView {
   std::vector<VertexId> vertexIndices;
-  std::vector<EdgeId> primitiveIds;
+  std::vector<T> primitiveIds;
   std::size_t primitiveCount;
 
   void Clear() {
@@ -16,11 +17,12 @@ struct ModelView {
   }
 };
 
-using FaceView = ModelView;
-using LineView = ModelView;
+using VolumeView = ModelView<VolumeId>;
+using FaceView = ModelView<FaceId>;
+using LineView = ModelView<EdgeId>;
 
 struct ModelViews {
   FaceView faces;
-  FaceView volumes;
+  VolumeView volumes;
   LineView lines;
 };

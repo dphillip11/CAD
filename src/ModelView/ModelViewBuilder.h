@@ -9,7 +9,7 @@ class ModelViewBuilder {
 
   void BuildLineView(LineView& outLines);
   void BuildFaceView(FaceView& outFaces);
-  void BuildVolumeView(FaceView& outVolumes);
+  void BuildVolumeView(VolumeView& outVolumes);
 
  private:
   const Model& model_;

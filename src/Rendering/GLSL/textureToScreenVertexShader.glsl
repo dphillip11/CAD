@@ -1,7 +1,3 @@
-uniform sampler2D tex0;
-uniform sampler2D tex1;
-uniform sampler2D tex2;
-
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec2 aTexCoord;
 

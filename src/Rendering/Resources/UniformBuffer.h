@@ -42,6 +42,19 @@ layout(std140) uniform GlobalUniforms
 };
 )";
 
+constexpr const char* GLSL_TEXTURE_UNIFORMS = R"(
+// Render target textures (for screen pass)
+uniform sampler2D tex0;
+uniform sampler2D tex1;
+uniform sampler2D tex2;
+uniform sampler2D depth0;
+uniform sampler2D depth1;
+uniform sampler2D depth2;
+
+// Primitive ID buffer (for geometry identification)
+uniform usamplerBuffer faceIdBuffer;
+)";
+
 // Helper to get the appropriate version string based on platform
 #ifdef __EMSCRIPTEN__
 constexpr const char* GetGLSLVersion() { return GLSL_VERSION_ES; }
@@ -52,9 +65,9 @@ constexpr const char* GetGLSLVersion() { return GLSL_VERSION_DESKTOP; }
 // Complete shader preamble (version + precision + uniforms)
 inline std::string GetShaderPreamble() {
 #ifdef __EMSCRIPTEN__
-  return std::string(GetGLSLVersion()) + GLSL_PRECISION_ES + GLSL_UNIFORMS;
+  return std::string(GetGLSLVersion()) + GLSL_PRECISION_ES + GLSL_UNIFORMS + GLSL_TEXTURE_UNIFORMS;
 #else
-  return std::string(GetGLSLVersion()) + GLSL_UNIFORMS;
+  return std::string(GetGLSLVersion()) + GLSL_UNIFORMS + GLSL_TEXTURE_UNIFORMS;
 #endif
 }
 
