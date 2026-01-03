@@ -66,7 +66,7 @@ void Renderer::Render() {
   device_.BeginFrame();
 
   pointPass_.Execute(device_, model_.Vertices().size());
-  facePass_.Execute(device_, views_.faces.vertexIndices.size());
+  facePass_.Execute(device_, views_.faces.vertices.size());  // Use vertices count (non-indexed)
   linePass_.Execute(device_, views_.lines.vertexIndices.size());
   screenPass_.Execute(device_, 6);
 
@@ -89,29 +89,47 @@ void Renderer::UpdateEdgeIndices() {
 }
 
 void Renderer::UpdateFaceIndices() {
-  // Upload face indices
-  if (!views_.faces.vertexIndices.empty()) {
-    device_.UpdateIndexBuffer(resources_.faceIndexBuffer, views_.faces.vertexIndices);
+  // Upload expanded face vertices (non-indexed rendering now)
+  if (!views_.faces.vertices.empty()) {
+    // Create a temporary buffer to match face vertices to the main vertex buffer
+    // We need to upload these as Vec3 positions
+    device_.UpdateVertexBuffer(resources_.faceVertexBuffer,
+                               views_.faces.vertices.size() * sizeof(Vec3),
+                               views_.faces.vertices.data());
   }
 
-  // Upload face primitive IDs to 1D texture
+  // Upload face primitive IDs as vertex attribute (one per vertex)
+  // Convert to float for GL_FLOAT vertex attribute
   if (!views_.faces.primitiveIds.empty()) {
-    // Recreate texture with correct size if needed
-    if (views_.faces.primitiveIds.size() > 1) {  // Need to resize from initial dummy size
-      device_.DestroyTexture(resources_.faceIdTexture);
-      resources_.faceIdTexture = device_.CreateTexture1D(views_.faces.primitiveIds.size());
-      device_.BindTexture(resources_.faceIdTexture, 6);
-      device_.BindShader(resources_.basicShader);
-      device_.SetUniform("faceIdTexture", 6);
+    std::vector<float> primitiveIdsFloat;
+    primitiveIdsFloat.reserve(views_.faces.primitiveIds.size());
+    for (uint32_t id : views_.faces.primitiveIds) {
+      primitiveIdsFloat.push_back(static_cast<float>(id));
     }
-    device_.UpdateTexture1D(resources_.faceIdTexture, views_.faces.primitiveIds);
+    device_.UpdateVertexBuffer(resources_.facePrimitiveIdBuffer,
+                               primitiveIdsFloat.size() * sizeof(float), primitiveIdsFloat.data());
   }
 }
 
 void Renderer::UpdateVolumeIndices() {
-  // Upload volume indices
-  if (!views_.volumes.vertexIndices.empty()) {
-    device_.UpdateIndexBuffer(resources_.volumeIndexBuffer, views_.volumes.vertexIndices);
+  // Upload volume vertices (expanded geometry, non-indexed)
+  if (!views_.volumes.vertices.empty()) {
+    device_.UpdateVertexBuffer(resources_.vertexBuffer,
+                               views_.volumes.vertices.size() * sizeof(Vec3),
+                               views_.volumes.vertices.data());
+
+    // Upload primitive IDs as vertex attributes
+    // Convert to float for GL_FLOAT vertex attribute
+    if (!views_.volumes.primitiveIds.empty()) {
+      std::vector<float> primitiveIdsFloat;
+      primitiveIdsFloat.reserve(views_.volumes.primitiveIds.size());
+      for (uint32_t id : views_.volumes.primitiveIds) {
+        primitiveIdsFloat.push_back(static_cast<float>(id));
+      }
+      device_.UpdateVertexBuffer(resources_.facePrimitiveIdBuffer,
+                                 primitiveIdsFloat.size() * sizeof(float),
+                                 primitiveIdsFloat.data());
+    }
   }
 }
 

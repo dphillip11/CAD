@@ -91,6 +91,12 @@ class SparseSet {
     return sparse_[id];
   }
 
+  // Get ID from dense index (inverse of DenseIndex)
+  Id IdAt(uint32_t denseIndex) const {
+    assert(denseIndex < dense_to_id_.size());
+    return dense_to_id_[denseIndex];
+  }
+
   uint32_t DenseCount() const { return static_cast<uint32_t>(dense_.size()); }
 
   const std::vector<T>& Dense() const { return dense_; }
@@ -151,6 +157,9 @@ class DirtySparseSet {
 
   // Use for building GPU index buffers
   uint32_t DenseIndex(Id id) const { return sparse_.DenseIndex(id); }
+
+  // Get ID from dense index (inverse of DenseIndex)
+  Id IdAt(uint32_t denseIndex) const { return sparse_.IdAt(denseIndex); }
 
   uint32_t DenseCount() const { return sparse_.DenseCount(); }
 

@@ -50,6 +50,7 @@ class Model {
   std::span<const Volume> Volumes() const;
 
   uint32_t VertexIdToIndex(VertexId id) const;
+  FaceId FaceIndexToId(uint32_t index) const;
 
   // ---- Dirty Flag Management ---------------------------------
   bool IsVerticesDirty() const { return verticesDirty_; }

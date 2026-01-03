@@ -120,6 +120,8 @@ std::span<const Volume> Model::Volumes() const { return volumes_.Dense(); }
 
 uint32_t Model::VertexIdToIndex(VertexId id) const { return vertices_.DenseIndex(id); }
 
+FaceId Model::FaceIndexToId(uint32_t index) const { return faces_.IdAt(index); }
+
 bool Model::CanCreateEdge(VertexId a, VertexId b) const {
   if (a == b) return false;
 

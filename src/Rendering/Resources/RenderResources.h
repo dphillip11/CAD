@@ -16,16 +16,16 @@ class RenderResources {
 
   // vertices
   GpuHandle vertexBuffer;
+  GpuHandle faceVertexBuffer;  // Expanded vertices for faces (non-indexed)
   GpuHandle fullscreenQuadVertexBuffer;
   GpuHandle pointCrossTemplateBuffer;  // Template mesh for point crosses (instanced)
+  GpuHandle facePrimitiveIdBuffer;     // Buffer for per-vertex primitive IDs
   // indices
   GpuHandle edgeIndexBuffer;
   GpuHandle faceIndexBuffer;
   GpuHandle volumeIndexBuffer;
   GpuHandle fullscreenQuadIndexBuffer;
   GpuHandle pointCrossIndexBuffer;  // Indices for point cross template
-  // primitive ID texture (1D texture for face IDs)
-  GpuHandle faceIdTexture;  // 1D texture (as 2D) for face primitive IDs
   // shaders
   GpuHandle pointShader;
   GpuHandle basicShader;
@@ -43,6 +43,7 @@ class RenderResources {
   GpuHandle depthTexture2;
   // vao
   GpuHandle geometryPipeline;
+  GpuHandle facePipeline;  // Pipeline for faces with expanded vertices
   GpuHandle screenPipeline;
   // uniforms
   GpuHandle frameUniformBuffer;

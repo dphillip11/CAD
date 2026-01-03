@@ -31,22 +31,34 @@ void ModelViewBuilder::BuildFaceView(FaceView& outFaces) {
 
   const auto& faces = model_.Faces();
   const auto& edges = model_.Edges();
+  const auto& vertices = model_.Vertices();
 
   uint32_t faceIndex = 0;
   for (const auto& f : faces) {
+    // Get the actual FaceId for this face
+    FaceId faceId = model_.FaceIndexToId(faceIndex);
+
     auto verts = Topology::ExtractVertices(f, edges);
     if (verts.size() < 3) {
       ++faceIndex;
       continue;
     }
 
-    // fan triangulation
+    // fan triangulation - expand vertices (no indexing)
     for (size_t i = 1; i + 1 < verts.size(); ++i) {
-      outFaces.vertexIndices.push_back(model_.VertexIdToIndex(verts[0]));
-      outFaces.vertexIndices.push_back(model_.VertexIdToIndex(verts[i]));
-      outFaces.vertexIndices.push_back(model_.VertexIdToIndex(verts[i + 1]));
+      // Add the 3 vertices of the triangle
+      uint32_t idx0 = model_.VertexIdToIndex(verts[0]);
+      uint32_t idx1 = model_.VertexIdToIndex(verts[i]);
+      uint32_t idx2 = model_.VertexIdToIndex(verts[i + 1]);
 
-      outFaces.primitiveIds.push_back(faceIndex);
+      outFaces.vertices.push_back(vertices[idx0].position);
+      outFaces.vertices.push_back(vertices[idx1].position);
+      outFaces.vertices.push_back(vertices[idx2].position);
+
+      // Store the actual Face ID once per vertex (3 times)
+      outFaces.primitiveIds.push_back(faceId);
+      outFaces.primitiveIds.push_back(faceId);
+      outFaces.primitiveIds.push_back(faceId);
     }
 
     ++faceIndex;
@@ -61,6 +73,7 @@ void ModelViewBuilder::BuildVolumeView(VolumeView& outVolumes) {
   const auto& volumes = model_.Volumes();
   const auto& faces = model_.Faces();
   const auto& edges = model_.Edges();
+  const auto& vertices = model_.Vertices();
 
   uint32_t volumeIndex = 0;
   for (const auto& vol : volumes) {
@@ -70,11 +83,19 @@ void ModelViewBuilder::BuildVolumeView(VolumeView& outVolumes) {
       if (verts.size() < 3) continue;
 
       for (size_t i = 1; i + 1 < verts.size(); ++i) {
-        outVolumes.vertexIndices.push_back(model_.VertexIdToIndex(verts[0]));
-        outVolumes.vertexIndices.push_back(model_.VertexIdToIndex(verts[i]));
-        outVolumes.vertexIndices.push_back(model_.VertexIdToIndex(verts[i + 1]));
+        // Add the 3 vertices of the triangle
+        uint32_t idx0 = model_.VertexIdToIndex(verts[0]);
+        uint32_t idx1 = model_.VertexIdToIndex(verts[i]);
+        uint32_t idx2 = model_.VertexIdToIndex(verts[i + 1]);
 
-        outVolumes.primitiveIds.push_back(volumeIndex);
+        outVolumes.vertices.push_back(vertices[idx0].position);
+        outVolumes.vertices.push_back(vertices[idx1].position);
+        outVolumes.vertices.push_back(vertices[idx2].position);
+
+        // Store the Face ID once per vertex (3 times) - use the face ID, not volume index
+        outVolumes.primitiveIds.push_back(fid);
+        outVolumes.primitiveIds.push_back(fid);
+        outVolumes.primitiveIds.push_back(fid);
       }
     }
 

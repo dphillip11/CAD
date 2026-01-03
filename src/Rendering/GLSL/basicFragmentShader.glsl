@@ -1,5 +1,7 @@
 out vec4 FragColor;
 
+flat in uint vPrimitiveId;
+
 vec4 idToColor(uint id)
 {
     const vec4 colors[10] = vec4[10](
@@ -19,15 +21,7 @@ vec4 idToColor(uint id)
 }
 
 void main() {
-#ifdef GL_ES
-    // WebGL doesn't support gl_PrimitiveID, use solid color for now
-    FragColor = faceColor;
-#else
-    // Desktop OpenGL supports gl_PrimitiveID
-    // Sample the face ID from the 1D texture using gl_PrimitiveID
-    uint faceId = texelFetch(faceIdTexture, ivec2(gl_PrimitiveID, 0), 0).r;
     
     // Convert face ID to a color
-    FragColor = idToColor(faceId);
-#endif
+    FragColor = idToColor(vPrimitiveId);
 }

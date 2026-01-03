@@ -51,9 +51,6 @@ uniform sampler2D tex2;
 uniform sampler2D depth0;
 uniform sampler2D depth1;
 uniform sampler2D depth2;
-
-// Primitive ID texture (for geometry identification)
-uniform usampler2D faceIdTexture;
 )";
 
 // Helper to get the appropriate version string based on platform

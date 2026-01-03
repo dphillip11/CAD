@@ -22,18 +22,20 @@ void RenderResources::LoadResources(RenderDevice& device) {
   device.BindPipeline(geometryPipeline);  // Bind VAO before setting attributes
   device.SetVertexAttributes(vertexBuffer, attr);
 
+  // Face rendering pipeline (separate for expanded vertices + primitive IDs)
+  facePipeline = device.CreatePipeline();
+  faceVertexBuffer = device.CreateBuffer();
+  facePrimitiveIdBuffer = device.CreateBuffer();
+
+  device.BindPipeline(facePipeline);
+  device.SetVertexAttributes(faceVertexBuffer, attr);  // Position at location 0
+  std::vector<VertexAttribute> primitiveIdAttr = {{"aPrimitiveId", 1, 1, 0}};
+  device.SetVertexAttributes(facePrimitiveIdBuffer, primitiveIdAttr);  // ID at location 1
+
   // indices
   edgeIndexBuffer = device.CreateBuffer();
   faceIndexBuffer = device.CreateBuffer();
   volumeIndexBuffer = device.CreateBuffer();
-
-  // primitive ID texture (1D texture stored as 2D, WebGL compatible)
-  faceIdTexture =
-      device.CreateTexture1D(1);  // Start with size 1, will be resized when data is loaded
-
-  // Initialize with dummy data (will be updated when faces are loaded)
-  std::vector<uint32_t> dummyIds = {0};
-  device.UpdateTexture1D(faceIdTexture, dummyIds);
 
   // uniforms
   frameUniformBuffer = device.CreateBuffer();
@@ -85,7 +87,6 @@ void RenderResources::LoadResources(RenderDevice& device) {
   device.SetUniform("depth0", 3);
   device.SetUniform("depth1", 4);
   device.SetUniform("depth2", 5);
-  device.SetUniform("faceIdBuffer", 6);
 
   // render textures - use actual framebuffer size
   texture0 = device.CreateTexture2D(fbWidth, fbHeight, false);
@@ -102,7 +103,6 @@ void RenderResources::LoadResources(RenderDevice& device) {
   device.BindTexture(depthTexture0, 3);
   device.BindTexture(depthTexture1, 4);
   device.BindTexture(depthTexture2, 5);
-  device.BindTexture(faceIdTexture, 6);  // Bind the 1D texture for primitive IDs
 
   framebuffer0 = device.CreateFrameBuffer(texture0, depthTexture0, 0);
   framebuffer1 = device.CreateFrameBuffer(texture1, depthTexture1, 0);
@@ -162,9 +162,9 @@ const RenderPass RenderResources::BuildPointPass() {
 const RenderPass RenderResources::BuildFacePass() {
   RenderPass pass;
 
-  pass.pipeline = geometryPipeline;
-  pass.vertexBuffer = vertexBuffer;
-  pass.indexBuffer = faceIndexBuffer;
+  pass.pipeline = facePipeline;          // Use face pipeline with expanded vertices
+  pass.vertexBuffer = faceVertexBuffer;  // Use expanded vertex buffer
+  pass.indexBuffer = 0;                  // No index buffer (non-indexed rendering)
   pass.topology = PrimitiveTopology::Triangles;
   pass.shaderProgram = basicShader;
   pass.frameBuffer = framebuffer2;
