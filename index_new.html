@@ -107,6 +107,8 @@
         
         <div class="controls-panel">
             <button id="debugButton" disabled>Debug</button>
+            <button id="undoButton" disabled>Undo (Ctrl+Z)</button>
+            <button id="redoButton" disabled>Redo (Ctrl+Shift+Z)</button>
             <label><input type="checkbox" id="resize"> Resize canvas</label>
             <label><input type="checkbox" id="pointerLock" checked> Lock/hide mouse pointer</label>
             <button onclick="Module.requestFullscreen(document.getElementById('pointerLock').checked, document.getElementById('resize').checked)">
@@ -128,6 +130,8 @@
         var canvasElement = document.getElementById('canvas');
         var outputElement = document.getElementById('output');
         var debugButton = document.getElementById('debugButton');
+        var undoButton = document.getElementById('undoButton');
+        var redoButton = document.getElementById('redoButton');
         
         // Clear output
         if (outputElement) {
@@ -183,8 +187,10 @@
                 Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies - left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
             },
             onRuntimeInitialized: function() {
-                // Enable the test button once the module is loaded
+                // Enable the buttons once the module is loaded
                 debugButton.disabled = false;
+                undoButton.disabled = false;
+                redoButton.disabled = false;
                 console.log('Module loaded, functions are now available!');
             }
         };
@@ -199,12 +205,28 @@
             };
         };
         
-        // Button click handler
+        // Button click handlers
         debugButton.onclick = function() {
             if (Module.debugButtonClick) {
                 Module.debugButtonClick();
             } else {
-                console.error('testButtonClick function not available yet');
+                console.error('debugButtonClick function not available yet');
+            }
+        };
+        
+        undoButton.onclick = function() {
+            if (Module.undo) {
+                Module.undo();
+            } else {
+                console.error('undo function not available yet');
+            }
+        };
+        
+        redoButton.onclick = function() {
+            if (Module.redo) {
+                Module.redo();
+            } else {
+                console.error('redo function not available yet');
             }
         };
     </script>
