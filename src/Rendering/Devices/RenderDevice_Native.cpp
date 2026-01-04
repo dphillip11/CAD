@@ -142,6 +142,22 @@ void RenderDevice::CaptureInput(FrameContext& context) {
                            glfwGetKey(window_, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
   context.input.altDown = glfwGetKey(window_, GLFW_KEY_LEFT_ALT) == GLFW_PRESS ||
                           glfwGetKey(window_, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS;
+
+  // Undo/Redo commands (Cmd+Z on Mac, Ctrl+Z on others)
+  // Only fire on key press, not while held (edge detection)
+  bool zKeyPressed = glfwGetKey(window_, GLFW_KEY_Z) == GLFW_PRESS;
+  bool zKeyJustPressed = zKeyPressed && !lastZKeyPressed_;
+  lastZKeyPressed_ = zKeyPressed;
+
+#ifdef __APPLE__
+  bool cmdDown = glfwGetKey(window_, GLFW_KEY_LEFT_SUPER) == GLFW_PRESS ||
+                 glfwGetKey(window_, GLFW_KEY_RIGHT_SUPER) == GLFW_PRESS;
+  context.input.undoPressed = cmdDown && !context.input.shiftDown;
+  context.input.redoPressed = cmdDown && context.input.shiftDown;
+#else
+  context.input.undoPressed = context.input.ctrlDown && !context.input.shiftDown;
+  context.input.redoPressed = context.input.ctrlDown && context.input.shiftDown;
+#endif
 }
 
 #endif  // __EMSCRIPTEN__

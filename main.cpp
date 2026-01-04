@@ -23,10 +23,40 @@ void emscripten_main_loop() {
 }
 
 // Test function to be called from JavaScript
-void debug() { g_app->Debug(); }
+void debug() {
+  if (g_app) {
+    g_app->Debug();
+  }
+}
 
-// Expose the function to JavaScript using Embind
-EMSCRIPTEN_BINDINGS(my_module) { emscripten::function("debugButtonClick", &debug); }
+// Undo function to be called from JavaScript
+void undo() {
+  if (g_app && g_app->GetCommandStack().CanUndo()) {
+    g_app->GetCommandStack().Undo();
+    std::cout << "Undo - " << g_app->GetCommandStack().UndoCount() << " commands in history"
+              << std::endl;
+  } else {
+    std::cout << "Nothing to undo" << std::endl;
+  }
+}
+
+// Redo function to be called from JavaScript
+void redo() {
+  if (g_app && g_app->GetCommandStack().CanRedo()) {
+    g_app->GetCommandStack().Redo();
+    std::cout << "Redo - " << g_app->GetCommandStack().RedoCount() << " commands available"
+              << std::endl;
+  } else {
+    std::cout << "Nothing to redo" << std::endl;
+  }
+}
+
+// Expose the functions to JavaScript using Embind
+EMSCRIPTEN_BINDINGS(my_module) {
+  emscripten::function("debugButtonClick", &debug);
+  emscripten::function("undo", &undo);
+  emscripten::function("redo", &redo);
+}
 #endif
 
 auto main() -> int {

@@ -1,6 +1,7 @@
 #include "Model.h"
 
 #include <cassert>
+#include <set>
 
 #include "Core/Primitives.h"
 #include "Geometry/Geometry.h"
@@ -36,6 +37,13 @@ bool Model::RemoveVertex(VertexId id) {
 const Vertex& Model::GetVertex(VertexId id) const {
   assert(vertices_.Contains(id));
   return vertices_.Get(id);
+}
+
+void Model::SetVertexPosition(VertexId id, const Vec3& position) {
+  assert(vertices_.Contains(id));
+  Vertex& vertex = vertices_.Get(id);
+  vertex.position = position;
+  verticesDirty_ = true;
 }
 
 std::optional<EdgeId> Model::CreateEdge(VertexId a, VertexId b) {
@@ -81,6 +89,29 @@ bool Model::RemoveFace(FaceId id) {
 const Face& Model::GetFace(FaceId id) const {
   assert(faces_.Contains(id));
   return faces_.Get(id);
+}
+
+void Model::ExtrudeFace(FaceId id, float delta) {
+  assert(faces_.Contains(id));
+  const Face& face = faces_.Get(id);
+
+  const auto faceVertexIds = Topology::ExtractVertices(face, edges_);
+
+  const Vertex& vertexA = vertices_.Get(faceVertexIds[0]);
+  const Vertex& vertexB = vertices_.Get(faceVertexIds[1]);
+  const Vertex& vertexC = vertices_.Get(faceVertexIds[2]);
+  Vec3 vecAB = vertexB.position - vertexA.position;
+  Vec3 vecBC = vertexC.position - vertexB.position;
+  const Vec3 normal = vecAB.Cross(vecBC).Normalize();
+
+  // move all vertices along normal
+  for (VertexId id : faceVertexIds) {
+    Vertex& vertex = vertices_.Get(id);
+    vertex.position += normal * delta;
+  }
+
+  verticesDirty_ = true;
+  facesDirty_ = true;
 }
 
 std::optional<VolumeId> Model::CreateVolume(std::span<const FaceId> faces) {

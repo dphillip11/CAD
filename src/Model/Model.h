@@ -15,6 +15,7 @@ class Model {
   bool RemoveVertex(VertexId id);
 
   const Vertex& GetVertex(VertexId id) const;
+  void SetVertexPosition(VertexId id, const Vec3& position);
 
   // ---- Edge ---------------------------------------------------
   std::optional<EdgeId> CreateEdge(VertexId a, VertexId b);
@@ -29,6 +30,8 @@ class Model {
   bool RemoveFace(FaceId id);
 
   const Face& GetFace(FaceId id) const;
+
+  void ExtrudeFace(FaceId id, float delta);
 
   // ---- Volume -------------------------------------------------
   std::optional<VolumeId> CreateVolume(std::span<const FaceId> faces);

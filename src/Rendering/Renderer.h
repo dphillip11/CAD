@@ -8,15 +8,16 @@
 #include "Rendering/Resources/RenderResources.h"
 
 class Model;
+class CommandStack;
 
 class Renderer {
  public:
-  explicit Renderer(RenderDevice& device, const Model& model);
+  explicit Renderer(RenderDevice& device, Model& model);
   ~Renderer();
 
   void Initialise();
 
-  void ProcessPendingUpdates(const FrameContext& context);
+  void ProcessPendingUpdates(const FrameContext& context, CommandStack& commandStack);
   void Render(const FrameContext& context);
 
   void Resize(uint32_t width, uint32_t height);
@@ -28,12 +29,12 @@ class Renderer {
   void UpdateFaceIndices();
   void UpdateVolumeIndices();
   void UpdateFrameContext(const FrameContext& context);
-  void ProcessInput(const FrameContext::InputState& input);
+  void ProcessInput(const FrameContext::InputState& input, CommandStack& commandStack);
   void HandleViewportResize(uint32_t width, uint32_t height);
   void HandlePick(uint32_t mouseX, uint32_t mouseY);
 
   RenderDevice& device_;
-  const Model& model_;
+  Model& model_;
   Camera camera_;
   ModelViewBuilder viewBuilder_;
   ModelViews views_;

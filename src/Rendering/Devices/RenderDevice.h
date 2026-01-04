@@ -125,6 +125,7 @@ class RenderDevice {
   double lastMouseY_ = 0.0;
   float scrollAccumulator_ = 0.0f;
   bool framebufferResized_ = false;
+  bool lastZKeyPressed_ = false;  // Track Z key state for edge detection
 
   // Utility functions
   GLuint CompileShader(GLenum type, const std::string& source);

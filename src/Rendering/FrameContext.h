@@ -43,5 +43,9 @@ struct FrameContext {
     bool shiftDown = false;
     bool ctrlDown = false;
     bool altDown = false;
+
+    // Command inputs
+    bool undoPressed = false;  // Ctrl+Z (Cmd+Z on Mac)
+    bool redoPressed = false;  // Ctrl+Shift+Z (Cmd+Shift+Z on Mac)
   } input;
 };

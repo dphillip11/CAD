@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "App/Commands/CommandStack.h"
+#include "App/Commands/Commands.h"
 #include "Model/Model.h"
 #include "ModelView/ModelViews.h"
 #include "Rendering/Devices/RenderDevice.h"
@@ -10,7 +12,7 @@
 #include "Rendering/Resources/UniformBuffer.h"
 #include "Utilities/Vec3.h"
 
-Renderer::Renderer(RenderDevice& device, const Model& model)
+Renderer::Renderer(RenderDevice& device, Model& model)
     : device_(device), model_(model), viewBuilder_(model) {
   Initialise();
 }
@@ -26,26 +28,9 @@ void Renderer::Initialise() {
   debugPass_ = resources_.BuildDebugPass();
 }
 
-void Renderer::ProcessPendingUpdates(const FrameContext& context) {
+void Renderer::ProcessPendingUpdates(const FrameContext& context, CommandStack& commandStack) {
   // Process input first
-  ProcessInput(context.input);
-
-  // Handle picking on right mouse click
-  static bool wasRightMouseDown = false;
-  if (context.input.mouseRightDown) {
-    // Only pick on first frame of click (detect click event)
-    if (!wasRightMouseDown) {
-      std::cout << "Right click detected at (" << context.input.mouseX << ", "
-                << context.input.mouseY << ")" << std::endl;
-      // Store pick request to be processed after rendering
-      hasPendingPick_ = true;
-      pendingPickX_ = static_cast<uint32_t>(context.input.mouseX);
-      pendingPickY_ = static_cast<uint32_t>(context.input.mouseY);
-    }
-    wasRightMouseDown = true;
-  } else {
-    wasRightMouseDown = false;
-  }
+  ProcessInput(context.input, commandStack);
 
   // Check for viewport resize
   if (context.viewportWidth != 0 && context.viewportHeight != 0) {
@@ -62,7 +47,7 @@ void Renderer::ProcessPendingUpdates(const FrameContext& context) {
     viewBuilder_.BuildLineView(views_.lines);
     UpdateEdgeIndices();
   }
-  if (model_.IsFacesDirty()) {
+  if (model_.IsFacesDirty() || model_.IsVerticesDirty()) {
     viewBuilder_.BuildFaceView(views_.faces);
     UpdateFaceIndices();
   }
@@ -179,7 +164,7 @@ void Renderer::UpdateFrameContext(const FrameContext& context) {
   device_.UpdateUniformBuffer(resources_.frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
 }
 
-void Renderer::ProcessInput(const FrameContext::InputState& input) {
+void Renderer::ProcessInput(const FrameContext::InputState& input, CommandStack& commandStack) {
   // Orbit with left mouse button
   if (input.mouseLeftDown && (input.mouseDeltaX != 0.0f || input.mouseDeltaY != 0.0f)) {
     camera_.Orbit(input.mouseDeltaX, input.mouseDeltaY);
@@ -192,10 +177,32 @@ void Renderer::ProcessInput(const FrameContext::InputState& input) {
     shouldUpdateUniforms_ = true;
   }
 
-  // Zoom with scroll wheel
-  if (input.scrollDelta != 0.0f) {
+  // Zoom with scroll wheel (if no face selected)
+  if (input.scrollDelta != 0.0f && selectedFaceId_ == 0) {
     camera_.Zoom(input.scrollDelta);
     shouldUpdateUniforms_ = true;
+  }
+  // Extrude selected face with scroll wheel
+  else if (input.scrollDelta != 0.0f && selectedFaceId_ != 0) {
+    // Use command stack for extrude
+    commandStack.Do<ExtrudeFaceCommand>(selectedFaceId_ - 1, input.scrollDelta);
+    std::cout << "Extruding face " << (selectedFaceId_ - 1) << " by " << input.scrollDelta
+              << std::endl;
+  }
+
+  // Handle picking on right mouse click
+  static bool wasRightMouseDown = false;
+  if (input.mouseRightDown) {
+    // Only pick on first frame of click (detect click event)
+    if (!wasRightMouseDown) {
+      // Store pick request to be processed after rendering
+      hasPendingPick_ = true;
+      pendingPickX_ = static_cast<uint32_t>(input.mouseX);
+      pendingPickY_ = static_cast<uint32_t>(input.mouseY);
+    }
+    wasRightMouseDown = true;
+  } else {
+    wasRightMouseDown = false;
   }
 }
 

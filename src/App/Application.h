@@ -1,5 +1,6 @@
 #pragma once
 
+#include "App/Commands/CommandStack.h"
 #include "Model/Model.h"
 #include "Rendering/Devices/RenderDevice.h"
 #include "Rendering/FrameContext.h"
@@ -14,8 +15,11 @@ class Application {
   bool Run();
   bool Exit();
 
+  CommandStack& GetCommandStack() { return commandStack_; }
+
  private:
   Model model;
+  CommandStack commandStack_;
   RenderDevice device;
   Renderer renderer;
   FrameContext ctx;

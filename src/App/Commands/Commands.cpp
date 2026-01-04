@@ -1,5 +1,7 @@
 #include "Commands.h"
 
+#include <set>
+
 #include "Model/Model.h"
 
 // =================================================
@@ -81,6 +83,47 @@ void RemoveFaceCommand::Undo(Model& model) {
   if (removedFace) {
     model.CreateFace(removedFace->edges);
     removedFace.reset();
+  }
+}
+
+// =================================================
+// Face Modification Commands
+// =================================================
+
+void ExtrudeFaceCommand::Execute(Model& model) {
+  if (!model.ContainsFace(faceId)) {
+    return;
+  }
+
+  // Store original positions for undo
+  if (affectedVertices.empty()) {
+    const Face& face = model.GetFace(faceId);
+    std::set<VertexId> uniqueVertices;
+
+    for (EdgeId edgeId : face.edges) {
+      const Edge& edge = model.GetEdge(edgeId);
+      uniqueVertices.insert(edge.a);
+      uniqueVertices.insert(edge.b);
+    }
+
+    affectedVertices.assign(uniqueVertices.begin(), uniqueVertices.end());
+    originalPositions.reserve(affectedVertices.size());
+
+    for (VertexId vid : affectedVertices) {
+      originalPositions.push_back(model.GetVertex(vid).position);
+    }
+  }
+
+  // Perform the extrusion
+  model.ExtrudeFace(faceId, delta);
+}
+
+void ExtrudeFaceCommand::Undo(Model& model) {
+  // Restore original vertex positions
+  for (size_t i = 0; i < affectedVertices.size(); ++i) {
+    if (model.ContainsVertex(affectedVertices[i])) {
+      model.SetVertexPosition(affectedVertices[i], originalPositions[i]);
+    }
   }
 }
 

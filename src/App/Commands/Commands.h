@@ -70,6 +70,18 @@ struct RemoveFaceCommand {
   void Undo(Model& model);
 };
 
+struct ExtrudeFaceCommand {
+  FaceId faceId;
+  float delta;
+
+  // Store original vertex positions for undo
+  std::vector<VertexId> affectedVertices;
+  std::vector<Vec3> originalPositions;
+
+  void Execute(Model& model);
+  void Undo(Model& model);
+};
+
 // =================================================
 // Volume Commands
 // =================================================
@@ -94,9 +106,9 @@ struct RemoveVolumeCommand {
 // Command Variant
 // =================================================
 
-using Command =
-    std::variant<CreateVertexCommand, RemoveVertexCommand, CreateEdgeCommand, RemoveEdgeCommand,
-                 CreateFaceCommand, RemoveFaceCommand, CreateVolumeCommand, RemoveVolumeCommand>;
+using Command = std::variant<CreateVertexCommand, RemoveVertexCommand, CreateEdgeCommand,
+                             RemoveEdgeCommand, CreateFaceCommand, RemoveFaceCommand,
+                             ExtrudeFaceCommand, CreateVolumeCommand, RemoveVolumeCommand>;
 
 // Helper visitors for Execute/Undo
 struct ExecuteVisitor {

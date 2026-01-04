@@ -7,7 +7,7 @@
 #include "Utilities/Mat4.h"
 #include "Utilities/Vec3.h"
 
-Application::Application() : device(), renderer(device, model) {}
+Application::Application() : commandStack_(model), device(), renderer(device, model) {}
 
 Application::~Application() = default;
 
@@ -76,7 +76,18 @@ bool Application::Run() {
     return false;
   }
 
-  renderer.ProcessPendingUpdates(ctx);
+  // Handle undo/redo commands
+  if (ctx.input.undoPressed && commandStack_.CanUndo()) {
+    commandStack_.Undo();
+    std::cout << "Undo - " << commandStack_.UndoCount() << " commands in history" << std::endl;
+  }
+
+  if (ctx.input.redoPressed && commandStack_.CanRedo()) {
+    commandStack_.Redo();
+    std::cout << "Redo - " << commandStack_.RedoCount() << " commands available" << std::endl;
+  }
+
+  renderer.ProcessPendingUpdates(ctx, commandStack_);
   renderer.Render(ctx);
 
   model.ResetDirtyFlags();
