@@ -168,8 +168,8 @@
                 
                 <h4>Undo/Redo:</h4>
                 <ul>
-                    <li><strong>Ctrl+Z</strong> (or <strong>Cmd+Z</strong> on Mac): Undo last operation</li>
-                    <li><strong>Ctrl+Shift+Z</strong> (or <strong>Cmd+Shift+Z</strong> on Mac): Redo operation</li>
+                    <li><strong>Ctrl+Z</strong>Undo last operation</li>
+                    <li><strong>Ctrl+Y</strong> (or <strong>Redo operation</li>
                     <li>Or use the <code>Undo</code> and <code>Redo</code> buttons above</li>
                 </ul>
                 
@@ -183,7 +183,7 @@
         <div class="controls-panel">
             <button id="debugButton" disabled>Debug</button>
             <button id="undoButton" disabled>Undo (Ctrl+Z)</button>
-            <button id="redoButton" disabled>Redo (Ctrl+Shift+Z)</button>
+            <button id="redoButton" disabled>Redo (Ctrl+Y)</button>
             <label><input type="checkbox" id="resize"> Resize canvas</label>
             <label><input type="checkbox" id="pointerLock" checked> Lock/hide mouse pointer</label>
             <button onclick="Module.requestFullscreen(document.getElementById('pointerLock').checked, document.getElementById('resize').checked)">
