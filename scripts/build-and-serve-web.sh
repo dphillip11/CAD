@@ -20,7 +20,7 @@ elif command -v open >/dev/null 2>&1; then
 fi
 
 if [ -n "$open_cmd" ]; then
-  (sleep 1; $open_cmd "http://localhost:${PORT}/hello.html" ) &
+  (sleep 1; $open_cmd "http://localhost:${PORT}/index.html" ) &
 fi
 
 if command -v python3 >/dev/null 2>&1; then
