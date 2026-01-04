@@ -95,6 +95,51 @@
         .hidden {
             display: none;
         }
+        
+        .help-section {
+            background-color: #252526;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #3c3c3c;
+        }
+        
+        .help-section h3 {
+            margin-top: 0;
+            color: #4ec9b0;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .help-section h3:hover {
+            color: #6ee7cf;
+        }
+        
+        .help-content {
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+        
+        .help-content ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        
+        .help-content li {
+            margin: 4px 0;
+        }
+        
+        .help-content code {
+            background-color: #1e1e1e;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #ce9178;
+        }
+        
+        .help-content strong {
+            color: #4fc1ff;
+        }
     </style>
 </head>
 <body>
@@ -103,6 +148,36 @@
             <span id="status">Downloading...</span>
             <span id="spinner" class="spinner"></span>
             <progress id="progress" max="100" value="0" class="hidden"></progress>
+        </div>
+        
+        <div class="help-section">
+            <h3 onclick="toggleHelp()">📖 Controls & Instructions (click to expand)</h3>
+            <div id="helpContent" class="help-content hidden">
+                <h4>Camera Controls:</h4>
+                <ul>
+                    <li><strong>Left Mouse Button + Drag:</strong> Orbit camera around the model</li>
+                    <li><strong>Middle Mouse Button + Drag:</strong> Pan camera</li>
+                    <li><strong>Scroll Wheel:</strong> Zoom in/out</li>
+                </ul>
+                
+                <h4>Selection & Editing:</h4>
+                <ul>
+                    <li><strong>Right Click:</strong> Select a face (face will be highlighted)</li>
+                    <li><strong>Scroll Wheel (when face selected):</strong> Extrude/translate the selected face along its normal</li>
+                </ul>
+                
+                <h4>Undo/Redo:</h4>
+                <ul>
+                    <li><strong>Ctrl+Z</strong> (or <strong>Cmd+Z</strong> on Mac): Undo last operation</li>
+                    <li><strong>Ctrl+Shift+Z</strong> (or <strong>Cmd+Shift+Z</strong> on Mac): Redo operation</li>
+                    <li>Or use the <code>Undo</code> and <code>Redo</code> buttons above</li>
+                </ul>
+                
+                <h4>Debug Mode:</h4>
+                <ul>
+                    <li>Click <code>Debug</code> button to toggle debug visualization</li>
+                </ul>
+            </div>
         </div>
         
         <div class="controls-panel">
@@ -124,6 +199,12 @@
     </div>
 
     <script>
+        // Toggle help section
+        function toggleHelp() {
+            var helpContent = document.getElementById('helpContent');
+            helpContent.classList.toggle('hidden');
+        }
+        
         var statusElement = document.getElementById('status');
         var progressElement = document.getElementById('progress');
         var spinnerElement = document.getElementById('spinner');
