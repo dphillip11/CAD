@@ -7,7 +7,11 @@
 #include "Utilities/Mat4.h"
 #include "Utilities/Vec3.h"
 
-Application::Application() : commandStack_(model), device(), renderer(device, model) {}
+Application::Application()
+    : commandStack_(model),
+      device(),
+      renderer(device, model),
+      inputHandler(commandStack_, renderer.GetCamera()) {}
 
 Application::~Application() = default;
 
@@ -67,27 +71,16 @@ void Application::Debug() {
 }
 
 bool Application::Run() {
-  // Capture input into FrameContext
-  device.CaptureInput(ctx);
-
   device.PollEvents();
-
   if (device.ShouldClose()) {
     return false;
   }
 
-  // Handle undo/redo commands
-  if (ctx.input.undoPressed && commandStack_.CanUndo()) {
-    commandStack_.Undo();
-    std::cout << "Undo - " << commandStack_.UndoCount() << " commands in history" << std::endl;
-  }
+  device.CaptureFrameContext(ctx);
+  device.CaptureInput(input);
+  inputHandler.HandleInput(input);
 
-  if (ctx.input.redoPressed && commandStack_.CanRedo()) {
-    commandStack_.Redo();
-    std::cout << "Redo - " << commandStack_.RedoCount() << " commands available" << std::endl;
-  }
-
-  renderer.ProcessPendingUpdates(ctx, commandStack_);
+  renderer.ProcessPendingUpdates(ctx, input);
   renderer.Render(ctx);
 
   model.ResetDirtyFlags();

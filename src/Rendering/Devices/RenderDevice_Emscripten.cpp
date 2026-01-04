@@ -1,8 +1,10 @@
 #ifdef __EMSCRIPTEN__
 
 #include <iostream>
+#include <set>
 #include <stdexcept>
 
+#include "App/Input.h"
 #include "RenderDevice.h"
 #include "Rendering/FrameContext.h"
 
@@ -102,56 +104,84 @@ void RenderDevice::FramebufferSizeCallback(GLFWwindow* window, int width, int he
   }
 }
 
-void RenderDevice::CaptureInput(FrameContext& context) {
+void RenderDevice::CaptureFrameContext(FrameContext& context) {
   // Update viewport dimensions if framebuffer was resized
   if (framebufferResized_) {
     context.viewportWidth = static_cast<uint32_t>(fbWidth_);
     context.viewportHeight = static_cast<uint32_t>(fbHeight_);
     framebufferResized_ = false;
   }
+}
 
-  // Get current mouse position
+void RenderDevice::CaptureInput(Input& input) {
+  // Collect current key states
+  std::set<KEYS> keysCurrentlyDown;
+
+  // Mouse buttons
+  if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+    keysCurrentlyDown.insert(KEYS::MOUSE_LEFT);
+  }
+  if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS) {
+    keysCurrentlyDown.insert(KEYS::MOUSE_MIDDLE);
+  }
+  if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+    keysCurrentlyDown.insert(KEYS::MOUSE_RIGHT);
+  }
+
+  // Keyboard modifiers
+  if (glfwGetKey(window_, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+      glfwGetKey(window_, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) {
+    keysCurrentlyDown.insert(KEYS::SHIFT);
+  }
+  if (glfwGetKey(window_, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
+      glfwGetKey(window_, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS) {
+    keysCurrentlyDown.insert(KEYS::CTRL);
+  }
+  if (glfwGetKey(window_, GLFW_KEY_LEFT_ALT) == GLFW_PRESS ||
+      glfwGetKey(window_, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS) {
+    keysCurrentlyDown.insert(KEYS::ALT);
+  }
+
+  // Keyboard keys
+  if (glfwGetKey(window_, GLFW_KEY_Z) == GLFW_PRESS) {
+    keysCurrentlyDown.insert(KEYS::Z);
+  }
+  if (glfwGetKey(window_, GLFW_KEY_Y) == GLFW_PRESS) {
+    keysCurrentlyDown.insert(KEYS::Y);
+  }
+  if (glfwGetKey(window_, GLFW_KEY_UP) == GLFW_PRESS) {
+    keysCurrentlyDown.insert(KEYS::UP);
+  }
+  if (glfwGetKey(window_, GLFW_KEY_DOWN) == GLFW_PRESS) {
+    keysCurrentlyDown.insert(KEYS::DOWN);
+  }
+  if (glfwGetKey(window_, GLFW_KEY_LEFT) == GLFW_PRESS) {
+    keysCurrentlyDown.insert(KEYS::LEFT);
+  }
+  if (glfwGetKey(window_, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+    keysCurrentlyDown.insert(KEYS::RIGHT);
+  }
+  if (glfwGetKey(window_, GLFW_KEY_SPACE) == GLFW_PRESS) {
+    keysCurrentlyDown.insert(KEYS::SPACE);
+  }
+  if (glfwGetKey(window_, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+    keysCurrentlyDown.insert(KEYS::ESCAPE);
+  }
+
+  // Collect mouse state
   double mouseX, mouseY;
   glfwGetCursorPos(window_, &mouseX, &mouseY);
 
-  // Calculate deltas from previous frame
-  context.input.mouseDeltaX = static_cast<float>(mouseX - lastMouseX_);
-  context.input.mouseDeltaY = static_cast<float>(mouseY - lastMouseY_);
+  MouseState mouseState;
+  mouseState.x = static_cast<float>(mouseX);
+  mouseState.y = static_cast<float>(mouseY);
+  mouseState.scrollDelta = scrollAccumulator_;
 
-  // Update stored position for next frame
-  lastMouseX_ = mouseX;
-  lastMouseY_ = mouseY;
-
-  // Update current position
-  context.input.mouseX = static_cast<float>(mouseX);
-  context.input.mouseY = static_cast<float>(mouseY);
-
-  // Capture accumulated scroll delta and reset
-  context.input.scrollDelta = scrollAccumulator_;
+  // Reset scroll accumulator after capturing
   scrollAccumulator_ = 0.0f;
 
-  // Button states
-  context.input.mouseLeftDown = glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
-  context.input.mouseMiddleDown =
-      glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
-  context.input.mouseRightDown = glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
-
-  // Keyboard modifiers
-  context.input.shiftDown = glfwGetKey(window_, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
-                            glfwGetKey(window_, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
-  context.input.ctrlDown = glfwGetKey(window_, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
-                           glfwGetKey(window_, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
-  context.input.altDown = glfwGetKey(window_, GLFW_KEY_LEFT_ALT) == GLFW_PRESS ||
-                          glfwGetKey(window_, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS;
-
-  // Undo/Redo commands (Ctrl+Z for web, browser will handle Cmd on Mac)
-  // Only fire on key press, not while held (edge detection)
-  bool zKeyPressed = glfwGetKey(window_, GLFW_KEY_Z) == GLFW_PRESS;
-  bool zKeyJustPressed = zKeyPressed && !lastZKeyPressed_;
-  lastZKeyPressed_ = zKeyPressed;
-
-  context.input.undoPressed = context.input.ctrlDown && zKeyPressed && !context.input.shiftDown;
-  context.input.redoPressed = context.input.ctrlDown && zKeyPressed && context.input.shiftDown;
+  // Update the Input object with collected state
+  input.Update(keysCurrentlyDown, mouseState);
 }
 
 #endif  // __EMSCRIPTEN__

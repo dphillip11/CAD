@@ -34,6 +34,10 @@ class Camera {
   float GetNear() const { return near_; }
   float GetFar() const { return far_; }
 
+  // Dirty flag management
+  bool IsDirty() const { return dirty_; }
+  void ClearDirty() { dirty_ = false; }
+
  private:
   void UpdateViewMatrix() const;
   void UpdateProjectionMatrix() const;
@@ -50,4 +54,5 @@ class Camera {
   mutable Mat4 projectionMatrix_;
   mutable bool viewDirty_;
   mutable bool projectionDirty_;
+  mutable bool dirty_;  // Public dirty flag for renderer
 };

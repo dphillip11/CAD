@@ -27,6 +27,7 @@ class IndexBuffer;
 class Mat4;
 struct VertexAttribute;
 class Vec3;
+class Input;
 
 class RenderDevice {
  public:
@@ -98,7 +99,8 @@ class RenderDevice {
   void PollEvents();
 
   // ----- Input capture -----
-  void CaptureInput(FrameContext& context);
+  void CaptureFrameContext(FrameContext& context);
+  void CaptureInput(Input& input);
 
   // ----- Framebuffer dimensions -----
   int GetFramebufferWidth() const { return fbWidth_; }
@@ -121,11 +123,8 @@ class RenderDevice {
   GLuint currentShader_ = 0;
 
   // Input state
-  double lastMouseX_ = 0.0;
-  double lastMouseY_ = 0.0;
   float scrollAccumulator_ = 0.0f;
   bool framebufferResized_ = false;
-  bool lastZKeyPressed_ = false;  // Track Z key state for edge detection
 
   // Utility functions
   GLuint CompileShader(GLenum type, const std::string& source);

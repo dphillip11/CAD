@@ -9,6 +9,7 @@
 
 class Model;
 class CommandStack;
+class Input;
 
 class Renderer {
  public:
@@ -17,11 +18,13 @@ class Renderer {
 
   void Initialise();
 
-  void ProcessPendingUpdates(const FrameContext& context, CommandStack& commandStack);
+  void ProcessPendingUpdates(const FrameContext& context, Input& input);
   void Render(const FrameContext& context);
 
   void Resize(uint32_t width, uint32_t height);
   void MarkDirty() { shouldUpdateUniforms_ = true; }
+
+  Camera& GetCamera() { return camera_; }
 
  private:
   void UpdateVertices();
@@ -29,9 +32,8 @@ class Renderer {
   void UpdateFaceIndices();
   void UpdateVolumeIndices();
   void UpdateFrameContext(const FrameContext& context);
-  void ProcessInput(const FrameContext::InputState& input, CommandStack& commandStack);
   void HandleViewportResize(uint32_t width, uint32_t height);
-  void HandlePick(uint32_t mouseX, uint32_t mouseY);
+  void HandlePick(Input& input);
 
   RenderDevice& device_;
   Model& model_;

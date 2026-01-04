@@ -4,6 +4,7 @@
 
 #include "App/Commands/CommandStack.h"
 #include "App/Commands/Commands.h"
+#include "App/Input.h"
 #include "Model/Model.h"
 #include "ModelView/ModelViews.h"
 #include "Rendering/Devices/RenderDevice.h"
@@ -28,16 +29,19 @@ void Renderer::Initialise() {
   debugPass_ = resources_.BuildDebugPass();
 }
 
-void Renderer::ProcessPendingUpdates(const FrameContext& context, CommandStack& commandStack) {
-  // Process input first
-  ProcessInput(context.input, commandStack);
-
+void Renderer::ProcessPendingUpdates(const FrameContext& context, Input& input) {
   // Check for viewport resize
   if (context.viewportWidth != 0 && context.viewportHeight != 0) {
     if (context.viewportWidth != lastViewportWidth_ ||
         context.viewportHeight != lastViewportHeight_) {
       HandleViewportResize(context.viewportWidth, context.viewportHeight);
     }
+  }
+
+  // Check if camera changed
+  if (camera_.IsDirty()) {
+    shouldUpdateUniforms_ = true;
+    camera_.ClearDirty();
   }
 
   if (model_.IsVerticesDirty()) {
@@ -56,11 +60,8 @@ void Renderer::ProcessPendingUpdates(const FrameContext& context, CommandStack& 
     UpdateVolumeIndices();
   }
 
-  // Handle pending pick AFTER geometry is rendered but BEFORE screen composite
-  if (hasPendingPick_) {
-    HandlePick(pendingPickX_, pendingPickY_);
-    hasPendingPick_ = false;
-  }
+  // Handle pending pick after geometry updates
+  HandlePick(input);
 
   if (shouldUpdateUniforms_) {
     UpdateFrameContext(context);
@@ -164,48 +165,6 @@ void Renderer::UpdateFrameContext(const FrameContext& context) {
   device_.UpdateUniformBuffer(resources_.frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
 }
 
-void Renderer::ProcessInput(const FrameContext::InputState& input, CommandStack& commandStack) {
-  // Orbit with left mouse button
-  if (input.mouseLeftDown && (input.mouseDeltaX != 0.0f || input.mouseDeltaY != 0.0f)) {
-    camera_.Orbit(input.mouseDeltaX, input.mouseDeltaY);
-    shouldUpdateUniforms_ = true;
-  }
-
-  // Pan with middle mouse button
-  if (input.mouseMiddleDown && (input.mouseDeltaX != 0.0f || input.mouseDeltaY != 0.0f)) {
-    camera_.Pan(input.mouseDeltaX, input.mouseDeltaY);
-    shouldUpdateUniforms_ = true;
-  }
-
-  // Zoom with scroll wheel (if no face selected)
-  if (input.scrollDelta != 0.0f && selectedFaceId_ == 0) {
-    camera_.Zoom(input.scrollDelta);
-    shouldUpdateUniforms_ = true;
-  }
-  // Extrude selected face with scroll wheel
-  else if (input.scrollDelta != 0.0f && selectedFaceId_ != 0) {
-    // Use command stack for extrude
-    commandStack.Do<ExtrudeFaceCommand>(selectedFaceId_ - 1, input.scrollDelta);
-    std::cout << "Extruding face " << (selectedFaceId_ - 1) << " by " << input.scrollDelta
-              << std::endl;
-  }
-
-  // Handle picking on right mouse click
-  static bool wasRightMouseDown = false;
-  if (input.mouseRightDown) {
-    // Only pick on first frame of click (detect click event)
-    if (!wasRightMouseDown) {
-      // Store pick request to be processed after rendering
-      hasPendingPick_ = true;
-      pendingPickX_ = static_cast<uint32_t>(input.mouseX);
-      pendingPickY_ = static_cast<uint32_t>(input.mouseY);
-    }
-    wasRightMouseDown = true;
-  } else {
-    wasRightMouseDown = false;
-  }
-}
-
 void Renderer::HandleViewportResize(uint32_t width, uint32_t height) {
   // Update screen pass viewport to match window size
   screenPass_.viewportWidth = width;
@@ -221,7 +180,15 @@ void Renderer::HandleViewportResize(uint32_t width, uint32_t height) {
   shouldUpdateUniforms_ = true;
 }
 
-void Renderer::HandlePick(uint32_t mouseX, uint32_t mouseY) {
+void Renderer::HandlePick(Input& input) {
+  // Check if there's a pending pick request
+  if (!input.IsPressed(KEYS::MOUSE_RIGHT)) {
+    return;
+  }
+
+  uint32_t mouseX = static_cast<uint32_t>(input.GetMouseX());
+  uint32_t mouseY = static_cast<uint32_t>(input.GetMouseY());
+
 #ifndef __EMSCRIPTEN__
   // Mac retina thing it seems
   mouseX *= 2;
@@ -238,10 +205,14 @@ void Renderer::HandlePick(uint32_t mouseX, uint32_t mouseY) {
   uint8_t pixel[4];
   device_.ReadPixel(fbX, fbY, pixel);
 
-  selectedFaceId_ = (pixel[0] << 8) | pixel[1];
+  uint32_t pickedFaceId = (pixel[0] << 8) | pixel[1];
+
+  // Update both renderer's internal state and the input state
+  selectedFaceId_ = pickedFaceId;
+  input.SetSelectedFaceId(pickedFaceId);
   shouldUpdateUniforms_ = true;
 
-  if (selectedFaceId_ != 0) {
-    std::cout << "Picked face ID: " << selectedFaceId_ - 1 << std::endl;
+  if (pickedFaceId != 0) {
+    std::cout << "Picked face ID: " << pickedFaceId - 1 << std::endl;
   }
 }

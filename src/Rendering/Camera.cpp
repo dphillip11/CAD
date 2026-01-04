@@ -12,37 +12,44 @@ Camera::Camera()
       near_(0.1f),
       far_(1000.0f),
       viewDirty_(true),
-      projectionDirty_(true) {}
+      projectionDirty_(true),
+      dirty_(true) {}
 
 void Camera::SetPosition(const Vec3& position) {
   position_ = position;
   viewDirty_ = true;
+  dirty_ = true;
 }
 
 void Camera::SetTarget(const Vec3& target) {
   target_ = target;
   viewDirty_ = true;
+  dirty_ = true;
 }
 
 void Camera::SetUp(const Vec3& up) {
   up_ = up;
   viewDirty_ = true;
+  dirty_ = true;
 }
 
 void Camera::SetFieldOfView(float fovDegrees) {
   fov_ = fovDegrees;
   projectionDirty_ = true;
+  dirty_ = true;
 }
 
 void Camera::SetAspectRatio(float aspect) {
   aspect_ = aspect;
   projectionDirty_ = true;
+  dirty_ = true;
 }
 
 void Camera::SetNearFar(float near, float far) {
   near_ = near;
   far_ = far;
   projectionDirty_ = true;
+  dirty_ = true;
 }
 
 void Camera::Orbit(float deltaX, float deltaY) {
@@ -73,6 +80,7 @@ void Camera::Orbit(float deltaX, float deltaY) {
   position_.z = target_.z + distance * std::cos(pitch) * std::cos(yaw);
 
   viewDirty_ = true;
+  dirty_ = true;
 }
 
 void Camera::Zoom(float delta) {
@@ -88,6 +96,7 @@ void Camera::Zoom(float delta) {
 
   position_ = target_ - direction * distance;
   viewDirty_ = true;
+  dirty_ = true;
 }
 
 void Camera::Pan(float deltaX, float deltaY) {
@@ -104,6 +113,7 @@ void Camera::Pan(float deltaX, float deltaY) {
   target_ = target_ + panVector;
 
   viewDirty_ = true;
+  dirty_ = true;
 }
 
 Mat4 Camera::GetViewMatrix() const {

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "App/Commands/CommandStack.h"
+#include "App/Input.h"
+#include "App/InputHandler.h"
 #include "Model/Model.h"
 #include "Rendering/Devices/RenderDevice.h"
 #include "Rendering/FrameContext.h"
@@ -23,4 +25,6 @@ class Application {
   RenderDevice device;
   Renderer renderer;
   FrameContext ctx;
+  Input input;
+  InputHandler inputHandler;
 };
