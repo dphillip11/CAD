@@ -96,9 +96,10 @@ void RenderResources::LoadResources(RenderDevice& device) {
   device.SetUniform("tex0", 0);
   device.SetUniform("tex1", 1);
   device.SetUniform("tex2", 2);
-  device.SetUniform("depth0", 3);
-  device.SetUniform("depth1", 4);
-  device.SetUniform("depth2", 5);
+  device.SetUniform("tex3", 3);
+  device.SetUniform("depth0", 4);
+  device.SetUniform("depth1", 5);
+  device.SetUniform("depth2", 6);
 
   debugShader = device.CreateShader(debugVertexSource, debugFragmentSource);
   device.BindShader(debugShader);
@@ -107,9 +108,10 @@ void RenderResources::LoadResources(RenderDevice& device) {
   device.SetUniform("tex0", 0);
   device.SetUniform("tex1", 1);
   device.SetUniform("tex2", 2);
-  device.SetUniform("depth0", 3);
-  device.SetUniform("depth1", 4);
-  device.SetUniform("depth2", 5);
+  device.SetUniform("tex3", 3);
+  device.SetUniform("depth0", 4);
+  device.SetUniform("depth1", 5);
+  device.SetUniform("depth2", 6);
 
   // render textures - use actual framebuffer size
   texture0 = device.CreateTexture2D(fbWidth, fbHeight, false);
@@ -125,9 +127,10 @@ void RenderResources::LoadResources(RenderDevice& device) {
   device.BindTexture(texture0, 0);
   device.BindTexture(texture1, 1);
   device.BindTexture(texture2, 2);
-  device.BindTexture(depthTexture0, 3);
-  device.BindTexture(depthTexture1, 4);
-  device.BindTexture(depthTexture2, 5);
+  device.BindTexture(texture3, 3);
+  device.BindTexture(depthTexture0, 4);
+  device.BindTexture(depthTexture1, 5);
+  device.BindTexture(depthTexture2, 6);
 
   framebuffer0 = device.CreateFrameBuffer(texture0, depthTexture0, 0);
   framebuffer1 = device.CreateFrameBuffer(texture1, depthTexture1, 0);

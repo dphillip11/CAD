@@ -83,7 +83,7 @@ void Renderer::Render(const FrameContext& context) {
   facePass_.Execute(device_, views_.faces.vertices.size());  // Face IDs
   
   // Render world positions: ground plane first, then faces on top
-  groundPlanePass_.Execute(device_, 6);  // Fullscreen quad (6 vertices for 2 triangles)
+  groundPlanePass_.Execute(device_, 6);  // Fullscreen quad (6 indices for 2 triangles)
   worldPosPass_.Execute(device_, views_.faces.vertices.size());  // World positions
   
   linePass_.Execute(device_, views_.lines.vertexIndices.size());

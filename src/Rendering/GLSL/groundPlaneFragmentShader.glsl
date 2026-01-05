@@ -1,49 +1,44 @@
 out vec4 FragColor;
+in vec2 TexCoord;
 
-in vec2 screenCoord;
-
-void main() {
-    // Unproject screen coordinates to ground plane (y=0)
-    // screenCoord is in NDC space [-1, 1]
-    
-    // Get inverse view-projection matrix
-    mat4 viewProj = projectionMatrix * viewMatrix;
-    mat4 invViewProj = inverse(viewProj);
-    
-    // Create two points along the ray: near and far plane
-    vec4 nearPoint = invViewProj * vec4(screenCoord, -1.0, 1.0);
-    vec4 farPoint = invViewProj * vec4(screenCoord, 1.0, 1.0);
-    
-    // Perspective divide
-    nearPoint /= nearPoint.w;
-    farPoint /= farPoint.w;
-    
-    // Ray direction
-    vec3 rayDir = normalize(farPoint.xyz - nearPoint.xyz);
-    vec3 rayOrigin = nearPoint.xyz;
-    
-    // Intersect with ground plane (y=0)
-    // rayOrigin.y + t * rayDir.y = 0
-    // t = -rayOrigin.y / rayDir.y
-    
-    if (rayDir.y >= 0.0) {
-        // Ray pointing away from ground, discard
-        discard;
-    }
-    
+// Ray-plane intersection for ground plane at y=0
+bool rayPlaneIntersect(vec3 rayOrigin, vec3 rayDir, out vec3 hitPoint) {
     float t = -rayOrigin.y / rayDir.y;
-    
-    if (t < 0.0) {
-        // Intersection behind camera, discard
-        discard;
+    if (t > 0.0) {
+        hitPoint = rayOrigin + rayDir * t;
+        return true;
     }
+    return false;
+}
+
+
+// Get the fully composited pixel color at a given position
+vec4 getCompositeColor(vec2 position) {
+    // Reconstruct ray direction from NDC
+    vec2 ndc = position * 2.0 - 1.0;
     
-    vec3 groundPos = rayOrigin + t * rayDir;
-    groundPos.y = 0.0; // Ensure exactly on ground plane
+    // Inverse projection to get view space ray
+    mat4 invProj = inverse(projectionMatrix);
+    vec4 rayView = invProj * vec4(ndc, 1.0, 1.0);
+    rayView /= rayView.w;
     
-    // Set depth to far plane so geometry always wins depth test
-    gl_FragDepth = 1.0;
+    // Inverse view to get world space ray
+    mat4 invView = inverse(viewMatrix);
+    vec3 rayOrigin = (invView * vec4(0, 0, 0, 1)).xyz;
+    vec3 rayDir = normalize((invView * vec4(rayView.xyz, 0)).xyz);
     
-    // Output raw world position (RGB32F texture)
-    FragColor = vec4(groundPos, 1.0);
+    // Check for ground plane intersection
+    vec3 hitPoint;
+    float groundDepth = 1.0; // Far plane if no intersection
+    
+    if (rayPlaneIntersect(rayOrigin, rayDir, hitPoint)) {
+        return vec4(hitPoint,1.0);
+    } else {
+        return vec4(0.0);
+    }
+}
+
+void main() {    
+    FragColor = getCompositeColor(TexCoord);
+    gl_FragDepth = .99f;
 }
