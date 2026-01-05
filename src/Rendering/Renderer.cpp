@@ -24,6 +24,8 @@ void Renderer::Initialise() {
   resources_.LoadResources(device_);
   pointPass_ = resources_.BuildPointPass();
   facePass_ = resources_.BuildFacePass();
+  groundPlanePass_ = resources_.BuildGroundPlanePass();
+  worldPosPass_ = resources_.BuildWorldPosPass();
   linePass_ = resources_.BuildLinePass();
   screenPass_ = resources_.BuildScreenPass();
   debugPass_ = resources_.BuildDebugPass();
@@ -78,7 +80,12 @@ void Renderer::Render(const FrameContext& context) {
 
   // Render geometry to framebuffers
   pointPass_.Execute(device_, model_.Vertices().size());
-  facePass_.Execute(device_, views_.faces.vertices.size());  // Use vertices count (non-indexed)
+  facePass_.Execute(device_, views_.faces.vertices.size());  // Face IDs
+  
+  // Render world positions: ground plane first, then faces on top
+  groundPlanePass_.Execute(device_, 6);  // Fullscreen quad (6 vertices for 2 triangles)
+  worldPosPass_.Execute(device_, views_.faces.vertices.size());  // World positions
+  
   linePass_.Execute(device_, views_.lines.vertexIndices.size());
 
   // Composite to screen
@@ -197,6 +204,10 @@ void Renderer::HandlePick(Input& input) {
 
   uint32_t fbX = mouseX;
   uint32_t fbY = lastViewportHeight_ - mouseY;
+  
+  std::cout << "HandlePick: mouseX=" << mouseX << ", mouseY=" << mouseY 
+            << ", fbX=" << fbX << ", fbY=" << fbY 
+            << ", viewportHeight=" << lastViewportHeight_ << std::endl;
 
   // Bind the face framebuffer to read from (texture2)
   device_.BindFrameBuffer(resources_.framebuffer2);
@@ -211,6 +222,13 @@ void Renderer::HandlePick(Input& input) {
   uint32_t pickedFaceId = (static_cast<uint32_t>(pixel[0]) << 8) | 
                            static_cast<uint32_t>(pixel[1]);
 
+  // Get world position at picked location
+  auto worldPos = GetPickedWorldPosition(fbX, fbY);
+  if (worldPos.has_value()) {
+    std::cout << "Picked world position: (" << worldPos->x << ", " 
+              << worldPos->y << ", " << worldPos->z << ")" << std::endl;
+  }
+
   // Update both renderer's internal state and the input state
   selectedFaceId_ = pickedFaceId;
   input.SetSelectedFaceId(pickedFaceId);
@@ -219,4 +237,25 @@ void Renderer::HandlePick(Input& input) {
   if (pickedFaceId != 0) {
     std::cout << "Picked face ID: " << pickedFaceId - 1 << std::endl;
   }
+  
+  if (worldPos.has_value()) {
+    std::cout << "World position: (" << worldPos->x << ", " << worldPos->y << ", " 
+              << worldPos->z << ")" << std::endl;
+  }
+}
+
+std::optional<Vec3> Renderer::GetPickedWorldPosition(uint32_t fbX, uint32_t fbY) {
+  // Read world position from framebuffer3 (RGB32F texture)
+  device_.BindFrameBuffer(resources_.framebuffer3);
+  
+  float pixel[4];  // RGBA floats
+  device_.ReadFloatPixel(fbX, fbY, pixel);
+  
+  // Check alpha channel - if 0, no geometry was hit
+  if (pixel[3] == 0.0f) {
+    return std::nullopt;
+  }
+  
+  // Return raw world position (no decoding needed with float texture)
+  return Vec3(pixel[0], pixel[1], pixel[2]);
 }

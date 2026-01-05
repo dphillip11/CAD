@@ -56,6 +56,22 @@ GpuHandle RenderDevice::CreateTexture2D(const float width, const float height,
   return textureId;
 }
 
+GpuHandle RenderDevice::CreateFloatTexture2D(const float width, const float height) {
+  GLuint textureId;
+  glGenTextures(1, &textureId);
+
+  glBindTexture(GL_TEXTURE_2D, textureId);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+  // Allocate RGB32F texture storage (3 floats per pixel)
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
+
+  return textureId;
+}
+
 GpuHandle RenderDevice::CreateDepthTexture2D(const float width, const float height) {
   GLuint textureId;
   glGenTextures(1, &textureId);
@@ -218,6 +234,18 @@ void RenderDevice::BindFrameBuffer(GpuHandle handle) { glBindFramebuffer(GL_FRAM
 void RenderDevice::ReadPixel(uint32_t x, uint32_t y, uint8_t* rgba) {
   // Note: Coordinates are in framebuffer space with origin at bottom-left
   glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+}
+
+void RenderDevice::ReadFloatPixel(uint32_t x, uint32_t y, float* rgba) {
+  // Note: Coordinates are in framebuffer space with origin at bottom-left
+  glReadPixels(x, y, 1, 1, GL_RGBA, GL_FLOAT, rgba);
+}
+
+float RenderDevice::ReadDepthPixel(uint32_t x, uint32_t y) {
+  // Note: Coordinates are in framebuffer space with origin at bottom-left
+  float depth;
+  glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
+  return depth;
 }
 
 void RenderDevice::SetUniform(const std::string& name, const Vec3& vec) {

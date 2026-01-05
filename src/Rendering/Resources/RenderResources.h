@@ -12,6 +12,8 @@ class RenderResources {
   const RenderPass BuildPointPass();
   const RenderPass BuildLinePass();
   const RenderPass BuildFacePass();
+  const RenderPass BuildGroundPlanePass();  // Render ground plane to world pos texture
+  const RenderPass BuildWorldPosPass();     // Render world positions to texture
   const RenderPass BuildScreenPass();
   const RenderPass BuildDebugPass();
 
@@ -33,6 +35,8 @@ class RenderResources {
   GpuHandle lineShader;
   GpuHandle screenShader;
   GpuHandle debugShader;
+  GpuHandle worldPosShader;     // Shader for rendering world positions
+  GpuHandle groundPlaneShader;  // Shader for rendering ground plane to world pos texture
   // render textures
   GpuHandle framebuffer0;
   GpuHandle texture0;
@@ -43,6 +47,9 @@ class RenderResources {
   GpuHandle framebuffer2;
   GpuHandle texture2;
   GpuHandle depthTexture2;
+  GpuHandle framebuffer3;  // World position framebuffer
+  GpuHandle texture3;      // World position texture (RGBA8 encoded)
+  GpuHandle depthTexture3; // Depth for world position framebuffer
   // vao
   GpuHandle geometryPipeline;
   GpuHandle facePipeline;  // Pipeline for faces with expanded vertices

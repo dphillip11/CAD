@@ -17,14 +17,14 @@ Application::~Application() = default;
 
 bool Application::Start() {
   // Create a simple cube - make it bigger
-  auto v0 = model.CreateVertex(Vec3{-.5, -.5, -.5});
-  auto v1 = model.CreateVertex(Vec3{.5, -.5, -.5});
-  auto v2 = model.CreateVertex(Vec3{.5, .5, -.5});
-  auto v3 = model.CreateVertex(Vec3{-.5, .5, -.5});
-  auto v4 = model.CreateVertex(Vec3{-.75, -.5, .5});
-  auto v5 = model.CreateVertex(Vec3{.5, -.5, .5});
-  auto v6 = model.CreateVertex(Vec3{.5, .75, .5});
-  auto v7 = model.CreateVertex(Vec3{-.75, .75, .5});
+  auto v0 = model.CreateVertex(Vec3{-1.0, -1.0, -1.0});
+  auto v1 = model.CreateVertex(Vec3{1.0, -1.0, -1.0});
+  auto v2 = model.CreateVertex(Vec3{1.0, 1.0, -1.0});
+  auto v3 = model.CreateVertex(Vec3{-1.0, 1.0, -1.0});
+  auto v4 = model.CreateVertex(Vec3{-1.0, -1.0, 1.0});
+  auto v5 = model.CreateVertex(Vec3{1.0, -1.0, 1.0});
+  auto v6 = model.CreateVertex(Vec3{1.0, 1.0, 1.0});
+  auto v7 = model.CreateVertex(Vec3{-1.0, 1.0, 1.0});
 
   // Create edges for the cube
   auto e0 = *model.CreateEdge(v0, v1);
