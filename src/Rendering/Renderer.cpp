@@ -189,8 +189,8 @@ void Renderer::HandlePick(Input& input) {
   uint32_t mouseX = static_cast<uint32_t>(input.GetMouseX());
   uint32_t mouseY = static_cast<uint32_t>(input.GetMouseY());
 
-#ifndef __EMSCRIPTEN__
-  // Mac retina thing it seems
+#ifdef __APPLE__
+  // Mac retina displays require 2x scaling
   mouseX *= 2;
   mouseY *= 2;
 #endif
@@ -205,7 +205,11 @@ void Renderer::HandlePick(Input& input) {
   uint8_t pixel[4];
   device_.ReadPixel(fbX, fbY, pixel);
 
-  uint32_t pickedFaceId = (pixel[0] << 8) | pixel[1];
+  // Decode face ID from R and G channels
+  // The shader encodes as: R = high byte (bits 8-15), G = low byte (bits 0-7)
+  // Note: glReadPixels with GL_RGBA returns bytes as [R, G, B, A]
+  uint32_t pickedFaceId = (static_cast<uint32_t>(pixel[0]) << 8) | 
+                           static_cast<uint32_t>(pixel[1]);
 
   // Update both renderer's internal state and the input state
   selectedFaceId_ = pickedFaceId;
