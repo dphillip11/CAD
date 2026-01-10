@@ -3,6 +3,9 @@ in vec2 TexCoord;
 
 uniform sampler2D faceMaterialTex;
 
+const vec3 lightPosition = vec3(10,100,10);
+const vec3 lightColor = vec3(0.8,0.8,1);
+
 // Decode two normalized floats back to a 16-bit ID (0-65535)
 uint decodeId(float high, float low) {
     uint highBits = uint(high * 255.0 + 0.5);
@@ -18,6 +21,8 @@ vec4 idToColor(uint id)
     float u = (float(actualFaceId) + 0.5) / float(maxFaces);
     vec4 material = texture(faceMaterialTex, vec2(u, 0.5));
     uint colorIndex = uint(material.r * 255.0);
+    uint metallicity = uint(material.g);
+    uint roughness = uint(material.b);
 
     const vec4 colors[10] = vec4[10](
         vec4(1.0, 0.3, 0.3, 1.0),  // Red

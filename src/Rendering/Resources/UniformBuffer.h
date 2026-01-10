@@ -52,6 +52,7 @@ constexpr const char* GLSL_TEXTURE_UNIFORMS = R"(
 uniform sampler2D tex0;
 uniform sampler2D tex1;
 uniform sampler2D tex2;
+uniform sampler2D tex3;  // World position texture (RGB32F)
 uniform sampler2D depth0;
 uniform sampler2D depth1;
 uniform sampler2D depth2;

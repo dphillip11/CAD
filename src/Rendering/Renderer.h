@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "ModelView/ModelViewBuilder.h"
 #include "ModelView/ModelViews.h"
 #include "Rendering/Camera.h"
@@ -26,6 +28,9 @@ class Renderer {
 
   Camera& GetCamera() { return camera_; }
 
+  // Get the 3D world position at framebuffer coordinates (returns nullopt if no geometry)
+  std::optional<Vec3> GetPickedWorldPosition(uint32_t fbX, uint32_t fbY);
+
  private:
   void UpdateVertices();
   void UpdateEdgeIndices();
@@ -49,6 +54,8 @@ class Renderer {
   RenderPass pointPass_;
   RenderPass linePass_;
   RenderPass facePass_;
+  RenderPass groundPlanePass_;  // Render ground plane to world pos texture
+  RenderPass worldPosPass_;     // Render world positions to texture
   RenderPass screenPass_;
   RenderPass debugPass_;
 

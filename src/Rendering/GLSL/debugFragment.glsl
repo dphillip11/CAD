@@ -28,23 +28,29 @@ vec4 idToColor(uint id)
     return colors[id % 10u];
 }
 
+const vec4 darkGrey = vec4(0.2, 0.2, 0.2, 1.0);
+
 void main() {  
     if (TexCoord.x < 0.5f && TexCoord.y < 0.5f)
     {
-        FragColor = texture(tex0, 2.0f * TexCoord);
+        vec4 color = texture(tex0,TexCoord);
+        FragColor = abs(color.a) < 0.01f ? darkGrey : color;
     }
     else if (TexCoord.x < 0.5f )
     {
-        FragColor = texture(tex1, vec2(2.0f * TexCoord.x, TexCoord.y));
+        vec4 color = texture(tex1, vec2(TexCoord.x, TexCoord.y));
+        FragColor = abs(color.a) < 0.01f ? darkGrey : color;
     }
     else if (TexCoord.y < 0.5f )
     {
-        vec4 color = texture(tex2, vec2(TexCoord.x, 2.0f * TexCoord.y));
+        vec4 color = texture(tex2, vec2(TexCoord.x,TexCoord.y));
         uint faceId = decodeId(color.r, color.g);
-        FragColor = faceId != 0u ? idToColor(faceId) : vec4(0);
+        FragColor = faceId != 0u ? idToColor(faceId) :  darkGrey;
     }
     else
     {
-        FragColor = vec4(0);
+        // World position texture (RGB32F)
+        vec4 worldPos = texture(tex3, vec2(TexCoord.x, TexCoord.y));
+        FragColor = vec4(0.5f + 0.1f * worldPos.xyz,1.0f);
     }
 }

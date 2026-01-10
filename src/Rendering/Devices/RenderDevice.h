@@ -41,6 +41,7 @@ class RenderDevice {
                               GpuHandle stencilHandle);
   GpuHandle CreateTexture1D(uint32_t width);
   GpuHandle CreateTexture2D(float width, float height, bool generateMipmaps);
+  GpuHandle CreateFloatTexture2D(float width, float height);  // RGB32F texture
   GpuHandle CreateDepthTexture2D(float width, float height);
   GpuHandle CreateShader(const std::string& vertexSource, const std::string& fragmentSource,
                          const std::string& geometrySource = "");
@@ -68,6 +69,8 @@ class RenderDevice {
 
   // ----- Picking -----
   void ReadPixel(uint32_t x, uint32_t y, uint8_t* rgba);
+  void ReadFloatPixel(uint32_t x, uint32_t y, float* rgba);  // Read RGBA32F pixel
+  float ReadDepthPixel(uint32_t x, uint32_t y);
 
   // ----- Uniforms -----
   void SetUniform(const std::string& name, const Vec3& vec);

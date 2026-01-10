@@ -47,6 +47,10 @@ void RenderResources::LoadResources(RenderDevice& device) {
   const std::string lineFragmentSource = IO::LoadSource("lineFragmentShader.glsl");
   const std::string textureVertexSource = IO::LoadSource("textureToScreenVertexShader.glsl");
   const std::string renderTexFragmentSource = IO::LoadSource("textureToScreenFragmentShader.glsl");
+  const std::string worldPosVertexSource = IO::LoadSource("worldPosVertexShader.glsl");
+  const std::string worldPosFragmentSource = IO::LoadSource("worldPosFragmentShader.glsl");
+  const std::string groundPlaneVertexSource = IO::LoadSource("groundPlaneVertexShader.glsl");
+  const std::string groundPlaneFragmentSource = IO::LoadSource("groundPlaneFragmentShader.glsl");
   const std::string pointVertexSource = IO::LoadSource("pointVertex.glsl");
   const std::string pointFragmentSource = IO::LoadSource("pointFragment.glsl");
   const std::string debugVertexSource = IO::LoadSource("debugVertex.glsl");
@@ -80,15 +84,22 @@ void RenderResources::LoadResources(RenderDevice& device) {
   device.BindShader(lineShader);
   device.UpdateUniformBuffer(frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
   screenShader = device.CreateShader(textureVertexSource, renderTexFragmentSource);
+  worldPosShader = device.CreateShader(worldPosVertexSource, worldPosFragmentSource);
+  groundPlaneShader = device.CreateShader(groundPlaneVertexSource, groundPlaneFragmentSource);
+  device.BindShader(worldPosShader);
+  device.UpdateUniformBuffer(frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
+  device.BindShader(groundPlaneShader);
+  device.UpdateUniformBuffer(frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
   device.BindShader(screenShader);
   device.UpdateUniformBuffer(frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
 
   device.SetUniform("tex0", 0);
   device.SetUniform("tex1", 1);
   device.SetUniform("tex2", 2);
-  device.SetUniform("depth0", 3);
-  device.SetUniform("depth1", 4);
-  device.SetUniform("depth2", 5);
+  device.SetUniform("tex3", 3);
+  device.SetUniform("depth0", 4);
+  device.SetUniform("depth1", 5);
+  device.SetUniform("depth2", 6);
   device.SetUniform("faceMaterialTex", 7);
 
   debugShader = device.CreateShader(debugVertexSource, debugFragmentSource);
@@ -98,18 +109,21 @@ void RenderResources::LoadResources(RenderDevice& device) {
   device.SetUniform("tex0", 0);
   device.SetUniform("tex1", 1);
   device.SetUniform("tex2", 2);
-  device.SetUniform("depth0", 3);
-  device.SetUniform("depth1", 4);
-  device.SetUniform("depth2", 5);
+  device.SetUniform("tex3", 3);
+  device.SetUniform("depth0", 4);
+  device.SetUniform("depth1", 5);
+  device.SetUniform("depth2", 6);
 
   // render textures - use actual framebuffer size
   texture0 = device.CreateTexture2D(fbWidth, fbHeight, false);
   texture1 = device.CreateTexture2D(fbWidth, fbHeight, false);
   texture2 = device.CreateTexture2D(fbWidth, fbHeight, false);
+  texture3 = device.CreateFloatTexture2D(fbWidth, fbHeight);  // Float texture for world positions
 
   depthTexture0 = device.CreateDepthTexture2D(fbWidth, fbHeight);
   depthTexture1 = device.CreateDepthTexture2D(fbWidth, fbHeight);
   depthTexture2 = device.CreateDepthTexture2D(fbWidth, fbHeight);
+  depthTexture3 = device.CreateDepthTexture2D(fbWidth, fbHeight);
 
   faceMaterialTexture =
       device.CreateTexture2D(1, 1, false);  // Placeholder, will be recreated in UpdateFaceIndices
@@ -118,13 +132,15 @@ void RenderResources::LoadResources(RenderDevice& device) {
   device.BindTexture(texture0, 0);
   device.BindTexture(texture1, 1);
   device.BindTexture(texture2, 2);
-  device.BindTexture(depthTexture0, 3);
-  device.BindTexture(depthTexture1, 4);
-  device.BindTexture(depthTexture2, 5);
+  device.BindTexture(texture3, 3);
+  device.BindTexture(depthTexture0, 4);
+  device.BindTexture(depthTexture1, 5);
+  device.BindTexture(depthTexture2, 6);
 
   framebuffer0 = device.CreateFrameBuffer(texture0, depthTexture0, 0);
   framebuffer1 = device.CreateFrameBuffer(texture1, depthTexture1, 0);
   framebuffer2 = device.CreateFrameBuffer(texture2, depthTexture2, 0);
+  framebuffer3 = device.CreateFrameBuffer(texture3, depthTexture3, 0);
 
   screenPipeline = device.CreatePipeline();
 
@@ -191,6 +207,46 @@ const RenderPass RenderResources::BuildFacePass() {
   pass.clearColor[1] = 0.0f;  // G
   pass.clearColor[2] = 0.0f;  // B
   pass.clearColor[3] = 0.0f;  // A
+  pass.viewportX = 0;
+  pass.viewportY = 0;
+  pass.viewportWidth = fbWidth;
+  pass.viewportHeight = fbHeight;
+
+  return pass;
+}
+
+const RenderPass RenderResources::BuildGroundPlanePass() {
+  RenderPass pass;
+
+  pass.pipeline = screenPipeline;  // Use fullscreen quad pipeline
+  pass.vertexBuffer = fullscreenQuadVertexBuffer;
+  pass.indexBuffer = fullscreenQuadIndexBuffer;
+  pass.topology = PrimitiveTopology::Triangles;
+  pass.shaderProgram = groundPlaneShader;
+  pass.frameBuffer = framebuffer3;
+  pass.clearOnBind = true;
+  pass.clearColor[0] = 0.0f;  // R
+  pass.clearColor[1] = 0.0f;  // G
+  pass.clearColor[2] = 0.0f;  // B
+  pass.clearColor[3] = 0.0f;  // A = 0 means invalid (no geometry)
+  pass.viewportX = 0;
+  pass.viewportY = 0;
+  pass.viewportWidth = fbWidth;
+  pass.viewportHeight = fbHeight;
+
+  return pass;
+}
+
+const RenderPass RenderResources::BuildWorldPosPass() {
+  RenderPass pass;
+
+  pass.pipeline = facePipeline;          // Use face pipeline with expanded vertices
+  pass.vertexBuffer = faceVertexBuffer;  // Use expanded vertex buffer
+  pass.indexBuffer = 0;                  // No index buffer (non-indexed rendering)
+  pass.topology = PrimitiveTopology::Triangles;
+  pass.shaderProgram = worldPosShader;
+  pass.frameBuffer = framebuffer3;
+  pass.clearOnBind = false;  // Don't clear - ground plane already rendered
   pass.viewportX = 0;
   pass.viewportY = 0;
   pass.viewportWidth = fbWidth;

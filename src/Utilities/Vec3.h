@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <ostream>
 
 struct Vec3 {
   constexpr explicit Vec3(float a) : Vec3(a, a, a) {}
@@ -47,4 +48,10 @@ inline constexpr auto IsEqual(const float a, const float b, const float epsilon 
 
 inline constexpr auto IsEqual(const Vec3& a, const Vec3& b, const float epsilon = 0.0001) -> bool {
   return abs((a - b).LengthSquared()) < epsilon;
+}
+
+// Stream output operator
+inline auto operator<<(std::ostream& os, const Vec3& v) -> std::ostream& {
+  os << "(" << v.x << ", " << v.y << ", " << v.z << ")";
+  return os;
 }
