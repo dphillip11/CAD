@@ -8,7 +8,7 @@ Translation of faces brought some new ideas with it, particularly related to how
 
 A face can be considered a coplanar polygon but when multiple faces connect then a transformation of one face affects the geometry of the others.
 
-I could impose limitations on the manipulation of geometry to enforce a sense of physical correctness or allow faces to split into coplay sections.
+I could impose limitations on the manipulation of geometry to enforce a sense of physical correctness or allow faces to split into coplanar sections.
 
 The latter tends towards a more sculpting type approach which could be quite fun. This aligns more closely with the rendering primitives too.
 

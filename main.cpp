@@ -1,6 +1,8 @@
 #include <iostream>
+#include <set>
 
 #include "App/Application.h"
+#include "App/Input.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -31,23 +33,25 @@ void debug() {
 
 // Undo function to be called from JavaScript
 void undo() {
-  if (g_app && g_app->GetCommandStack().CanUndo()) {
-    g_app->GetCommandStack().Undo();
-    std::cout << "Undo - " << g_app->GetCommandStack().UndoCount() << " commands in history"
-              << std::endl;
-  } else {
-    std::cout << "Nothing to undo" << std::endl;
+  if (g_app) {
+    // Simulate pressing the UNDO key
+    std::set<KEYS> keys;
+    keys.insert(KEYS::UNDO);
+    g_app->GetInput().Update(keys, g_app->GetInput().GetMouse());
+    std::cout << "Undo triggered - " << g_app->GetCommandStack().UndoCount()
+              << " commands in history" << std::endl;
   }
 }
 
 // Redo function to be called from JavaScript
 void redo() {
-  if (g_app && g_app->GetCommandStack().CanRedo()) {
-    g_app->GetCommandStack().Redo();
-    std::cout << "Redo - " << g_app->GetCommandStack().RedoCount() << " commands available"
-              << std::endl;
-  } else {
-    std::cout << "Nothing to redo" << std::endl;
+  if (g_app) {
+    // Simulate pressing the REDO key
+    std::set<KEYS> keys;
+    keys.insert(KEYS::REDO);
+    g_app->GetInput().Update(keys, g_app->GetInput().GetMouse());
+    std::cout << "Redo triggered - " << g_app->GetCommandStack().RedoCount()
+              << " commands available" << std::endl;
   }
 }
 

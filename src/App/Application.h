@@ -18,6 +18,7 @@ class Application {
   bool Exit();
 
   CommandStack& GetCommandStack() { return commandStack_; }
+  Input& GetInput() { return input; }
 
  private:
   Model model;
