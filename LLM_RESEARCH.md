@@ -111,6 +111,7 @@ cmake --build build --target check
 - `src/Model/CADModel.h/cpp` - Core CAD model
 - `src/Rendering/Renderer.h/cpp` - Rendering system
 - `src/Rendering/Resources/RenderResources.h/cpp` - Loading of render resources, configuration of render passes
+- `src/Rendering/Resources/UniformBuffer.h` - includes the inject uniforms accessible to shader code
 - `ARCHITECTURE.md` - Detailed architecture documentation
 - `ENVIRONMENT.MD` - Setup and build instructions
 
@@ -150,6 +151,7 @@ cmake --build build --target check
 
 ## Current Development Notes
 - WebGL compatibility issues with geometry shaders
+- shader code and features must be supported by webGL, this also constrains use of textures
 - Face translation affects connected geometry
 - Potential for procedural meshes, sculpting, rotational extrusion
 - Considering Catmull-Clark subdivision surfaces

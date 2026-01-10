@@ -1,6 +1,7 @@
 #include "Model.h"
 
 #include <cassert>
+#include <iostream>
 #include <set>
 
 #include "Core/Primitives.h"
@@ -75,7 +76,9 @@ std::optional<FaceId> Model::CreateFace(std::span<const EdgeId> edges) {
   Face f{};
   f.edges.assign(edges.begin(), edges.end());
 
-  return faces_.Insert(f);
+  const auto id = faces_.Insert(f);
+  faces_.Get(id).colorIndex = id;
+  return id;
 }
 
 bool Model::RemoveFace(FaceId id) {

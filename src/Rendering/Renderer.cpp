@@ -82,6 +82,7 @@ void Renderer::Render(const FrameContext& context) {
   linePass_.Execute(device_, views_.lines.vertexIndices.size());
 
   // Composite to screen
+  device_.BindTexture(resources_.faceMaterialTexture, 7);
   screenPass_.Execute(device_, 6);
 
   if (context.debug) {
@@ -127,6 +128,27 @@ void Renderer::UpdateFaceIndices() {
     device_.UpdateVertexBuffer(resources_.facePrimitiveIdBuffer,
                                primitiveIdsFloat.size() * sizeof(float), primitiveIdsFloat.data());
   }
+
+  // Upload face material data to texture (one texel per face)
+  if (!views_.faces.colorIndices.empty()) {
+    size_t faceCount = views_.faces.colorIndices.size();
+    if (faceCount != resources_.faceMaterialTextureWidth) {
+      if (resources_.faceMaterialTextureWidth > 0) {
+        device_.DestroyTexture(resources_.faceMaterialTexture);
+      }
+      resources_.faceMaterialTexture = device_.CreateTexture2D(faceCount, 1, false);
+      resources_.faceMaterialTextureWidth = faceCount;
+    }
+    std::vector<uint8_t> materialData;
+    materialData.reserve(faceCount * 4);
+    for (size_t i = 0; i < faceCount; ++i) {
+      materialData.push_back(views_.faces.colorIndices[i]);
+      materialData.push_back(views_.faces.roughness[i]);
+      materialData.push_back(views_.faces.metallicity[i]);
+      materialData.push_back(255);  // Alpha
+    }
+    device_.UpdateTexture2D(resources_.faceMaterialTexture, faceCount, 1, materialData);
+  }
 }
 
 void Renderer::UpdateVolumeIndices() {
@@ -161,6 +183,7 @@ void Renderer::UpdateFrameContext(const FrameContext& context) {
   uniforms.viewPortSize[0] = static_cast<float>(context.viewportWidth);
   uniforms.viewPortSize[1] = static_cast<float>(context.viewportHeight);
   uniforms.selectedFace = selectedFaceId_;
+  uniforms.maxFaces = views_.faces.primitiveCount;
 
   device_.UpdateUniformBuffer(resources_.frameUniformBuffer, sizeof(UniformBuffer), &uniforms, 0);
 }

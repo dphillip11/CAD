@@ -89,6 +89,7 @@ void RenderResources::LoadResources(RenderDevice& device) {
   device.SetUniform("depth0", 3);
   device.SetUniform("depth1", 4);
   device.SetUniform("depth2", 5);
+  device.SetUniform("faceMaterialTex", 7);
 
   debugShader = device.CreateShader(debugVertexSource, debugFragmentSource);
   device.BindShader(debugShader);
@@ -109,6 +110,10 @@ void RenderResources::LoadResources(RenderDevice& device) {
   depthTexture0 = device.CreateDepthTexture2D(fbWidth, fbHeight);
   depthTexture1 = device.CreateDepthTexture2D(fbWidth, fbHeight);
   depthTexture2 = device.CreateDepthTexture2D(fbWidth, fbHeight);
+
+  faceMaterialTexture =
+      device.CreateTexture2D(1, 1, false);  // Placeholder, will be recreated in UpdateFaceIndices
+  faceMaterialTextureWidth = 1;
 
   device.BindTexture(texture0, 0);
   device.BindTexture(texture1, 1);

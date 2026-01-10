@@ -19,11 +19,17 @@ struct LineView {
 struct FaceView {
   std::vector<Vec3> vertices;
   std::vector<FaceId> primitiveIds;
+  std::vector<uint8_t> colorIndices;
+  std::vector<uint8_t> roughness;
+  std::vector<uint8_t> metallicity;
   std::size_t primitiveCount;
 
   void Clear() {
     vertices.clear();
     primitiveIds.clear();
+    colorIndices.clear();
+    roughness.clear();
+    metallicity.clear();
     primitiveCount = 0;
   }
 };

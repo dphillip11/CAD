@@ -32,6 +32,9 @@ using FaceId = uint32_t;
 
 struct Face {
   std::vector<EdgeId> edges;
+  uint8_t colorIndex = 0;
+  uint8_t roughness = 0;
+  uint8_t metallicity = 0;
 };
 
 // Volume

@@ -43,6 +43,8 @@ class RenderResources {
   GpuHandle framebuffer2;
   GpuHandle texture2;
   GpuHandle depthTexture2;
+  GpuHandle faceMaterialTexture;
+  int faceMaterialTextureWidth = 0;
   // vao
   GpuHandle geometryPipeline;
   GpuHandle facePipeline;  // Pipeline for faces with expanded vertices

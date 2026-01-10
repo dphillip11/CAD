@@ -1,6 +1,8 @@
 out vec4 FragColor;
 in vec2 TexCoord;
 
+uniform sampler2D faceMaterialTex;
+
 // Decode two normalized floats back to a 16-bit ID (0-65535)
 uint decodeId(float high, float low) {
     uint highBits = uint(high * 255.0 + 0.5);
@@ -11,6 +13,11 @@ uint decodeId(float high, float low) {
 vec4 idToColor(uint id)
 {
     if (int(id) == selectedFace) return vec4(1);
+
+    uint actualFaceId = id - 1u;
+    float u = (float(actualFaceId) + 0.5) / float(maxFaces);
+    vec4 material = texture(faceMaterialTex, vec2(u, 0.5));
+    uint colorIndex = uint(material.r * 255.0);
 
     const vec4 colors[10] = vec4[10](
         vec4(1.0, 0.3, 0.3, 1.0),  // Red
@@ -25,7 +32,7 @@ vec4 idToColor(uint id)
         vec4(1.0, 0.8, 0.5, 1.0)   // Peach
     );
     
-    return colors[id % 10u];
+    return colors[colorIndex % 10u];
 }
 
 // Ray-plane intersection for ground plane at y=0

@@ -1,5 +1,7 @@
 #include "ModelViewBuilder.h"
 
+#include <iostream>
+
 #include "Model/Model.h"
 #include "ModelViewBuilder.h"
 #include "Topology/Tools.h"
@@ -61,10 +63,17 @@ void ModelViewBuilder::BuildFaceView(FaceView& outFaces) {
       outFaces.primitiveIds.push_back(faceId + 1);
     }
 
+    // Store material properties once per face
+    outFaces.colorIndices.push_back(f.colorIndex);
+    outFaces.roughness.push_back(f.roughness);
+    outFaces.metallicity.push_back(f.metallicity);
+
     ++faceIndex;
   }
 
   outFaces.primitiveCount = faceIndex;
+  std::cerr << "Built face view with " << outFaces.colorIndices.size()
+            << " materials, third: " << (int)outFaces.colorIndices[3] << std::endl;
 }
 
 void ModelViewBuilder::BuildVolumeView(VolumeView& outVolumes) {

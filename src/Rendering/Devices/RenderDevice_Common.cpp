@@ -170,6 +170,13 @@ void RenderDevice::UpdateTexture1D(GpuHandle textureHandle, std::span<const uint
   // Don't unbind - texture should remain bound to its texture unit
 }
 
+void RenderDevice::UpdateTexture2D(GpuHandle textureHandle, uint32_t width, uint32_t height,
+                                   std::span<const uint8_t> data) {
+  glBindTexture(GL_TEXTURE_2D, textureHandle);
+  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
+  // Don't unbind - texture should remain bound to its texture unit
+}
+
 void RenderDevice::BindPipeline(GpuHandle handle) { glBindVertexArray(handle); }
 
 void RenderDevice::BindVertexBuffer(GpuHandle handle) { glBindBuffer(GL_ARRAY_BUFFER, handle); }

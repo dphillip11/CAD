@@ -54,6 +54,8 @@ class RenderDevice {
   void UpdateUniformBuffer(GpuHandle handle, size_t bytes, const void* data, uint32_t position);
   void UpdateIndexBuffer(GpuHandle handle, std::span<const uint32_t> indices);
   void UpdateTexture1D(GpuHandle textureHandle, std::span<const uint32_t> data);
+  void UpdateTexture2D(GpuHandle textureHandle, uint32_t width, uint32_t height,
+                       std::span<const uint8_t> data);
 
   // ----- Binding -----
   void BindPipeline(GpuHandle handle);
